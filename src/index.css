@@ -122,29 +122,32 @@ body {
 
 /* ── NAV BUTTONS ── */
 .nav-item {
-  width: 44px;
-  height: 44px;
+  width: 42px;
+  height: 42px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--ui-text-muted);
-  border-radius: 10px;
+  background: #FAF9F6;
+  border: 1px solid #E6E3DA;
+  color: #3C4A6B;
+  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
   position: relative;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
 }
 
 .nav-item:hover {
-  color: var(--ui-text);
-  background: var(--ui-card-hover);
+  color: #12213F;
+  background: #EFEDE6;
+  border-color: #D7D4CB;
 }
 
 .nav-item.active {
-  color: var(--navy);
-  background: var(--ui-accent-dim);
-  border-left: 3px solid var(--navy) !important;
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
+  color: #FFFFFF !important;
+  background: var(--ui-accent, #B8933E) !important;
+  border: none !important;
+  box-shadow: 0 3px 8px rgba(184, 147, 62, 0.4) !important;
 }
 
 /* Tooltip */
@@ -243,17 +246,18 @@ body {
   background: var(--ui-accent);
   color: #FFFFFF !important;
   border: none;
-  border-radius: 6px;
-  padding: 10px 16px;
+  border-radius: 8px;
+  padding: 8px 14px;
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   width: 100%;
-  transition: background 0.2s;
+  transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 6px;
+  box-shadow: 0 2px 4px rgba(184, 147, 62, 0.2);
 }
 
 .btn:hover {
@@ -261,25 +265,26 @@ body {
 }
 
 .btn-outline {
-  background: transparent;
-  border: 1px solid var(--ui-border);
-  color: var(--ui-text);
-  padding: 7px 12px;
-  font-size: 11px;
-  border-radius: 6px;
+  background: #FAF9F6;
+  border: 1px solid #E6E3DA;
+  color: #3C4A6B;
+  padding: 8px 14px;
+  font-size: 12px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  font-weight: 500;
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 
 .btn-outline:hover {
-  border-color: var(--ui-accent);
-  color: var(--ui-accent);
-  background: var(--ui-accent-dim);
+  background-color: #EFEDE6;
+  border-color: #D7D4CB;
+  color: #12213F;
 }
 
 /* Premium Segmented Controls & Buttons */

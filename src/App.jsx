@@ -177,6 +177,7 @@ export default function App() {
   const [loadingAI, setLoadingAI] = useState(false);
   const [parsedAIResult, setParsedAIResult] = useState(null);
   const [showNewQuoteModal, setShowNewQuoteModal] = useState(false);
+  const [newQuoteOption, setNewQuoteOption] = useState('ai');
   const [showFormAiPrompt, setShowFormAiPrompt] = useState(false);
   const [loadingFormAI, setLoadingFormAI] = useState(false);
   const [showPrintTip, setShowPrintTip] = useState(false);
@@ -1796,45 +1797,14 @@ Quote:
               <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                 <button
                   onClick={handleResetQuote}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    padding: '8px 14px',
-                    backgroundColor: '#FAF9F6',
-                    color: '#3C4A6B',
-                    borderRadius: '8px',
-                    fontSize: '12px',
-                    fontWeight: '600',
-                    border: '1px solid #E6E3DA',
-                    transition: 'all 0.2s ease',
-                    cursor: 'pointer',
-                    boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#EFEDE6'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#FAF9F6'; }}
+                  className="btn-outline"
                 >
                   <Plus size={13} /> New Quote
                 </button>
                 <button
                   onClick={handleSaveQuoteDraft}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    padding: '8px 14px',
-                    backgroundColor: 'var(--ui-accent, #4F46E5)',
-                    color: '#FFFFFF',
-                    borderRadius: '8px',
-                    fontSize: '12px',
-                    fontWeight: '600',
-                    border: 'none',
-                    transition: 'all 0.2s ease',
-                    cursor: 'pointer',
-                    boxShadow: '0 2px 4px rgba(79,70,229,0.2)'
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--ui-accent-hover, #4338CA)'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'var(--ui-accent, #4F46E5)'; }}
+                  className="btn"
+                  style={{ width: 'auto' }}
                 >
                   <Save size={13} /> Save Draft
                 </button>
@@ -2796,50 +2766,74 @@ Quote:
         )}
       </div>
 
-      {/* 4. NEW QUOTE WIZARD DIALOG OVERLAY */}
+      {/* 4.      {/* 4. NEW QUOTE WIZARD DIALOG OVERLAY */}
       {showNewQuoteModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl border border-zinc-200 shadow-2xl p-6 max-w-md w-full text-center animate-scale-up text-left" style={{ fontFamily: 'Inter, sans-serif' }}>
-            <h3 className="text-lg font-extrabold text-zinc-900 font-outfit mb-2 text-center" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontWeight: '800' }}>Create New Quote</h3>
-            <p className="text-xs text-zinc-500 mb-6 text-center">Choose how you want to build this project proposal.</p>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl border border-zinc-200 shadow-2xl p-6 max-w-sm w-full animate-scale-up text-left" style={{ fontFamily: 'Inter, sans-serif' }}>
+            <h3 className="text-md font-extrabold text-zinc-900 mb-1 text-center" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontWeight: '800', letterSpacing: '-0.01em' }}>New Quote Setup</h3>
+            <p className="text-[11px] text-zinc-500 mb-5 text-center">Select your preferred project builder method.</p>
             
-            <div className="grid grid-cols-2 gap-4 mb-6">
+            <div className="space-y-3 mb-6">
               {/* Option 1: AI Assistant */}
-              <div 
-                onClick={() => {
-                  handleStartAIQuote();
-                }}
-                className="border-2 border-dashed border-zinc-200 hover:border-[var(--ui-accent, #4F46E5)] rounded-xl p-4 cursor-pointer transition-all hover:bg-zinc-50 flex flex-col items-center group text-center"
+              <label 
+                className={`flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition-all ${newQuoteOption === 'ai' ? 'border-[var(--ui-accent, #B8933E)] bg-zinc-50/50' : 'border-zinc-200 hover:bg-zinc-50/30'}`}
+                onClick={() => setNewQuoteOption('ai')}
               >
-                <div className="h-10 w-10 rounded-lg bg-indigo-50 text-[var(--ui-accent, #4F46E5)] flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                  <Sparkles size={20} />
+                <input 
+                  type="radio" 
+                  name="newQuoteMode" 
+                  value="ai" 
+                  checked={newQuoteOption === 'ai'} 
+                  onChange={() => setNewQuoteOption('ai')}
+                  className="w-4 h-4 text-[var(--ui-accent, #B8933E)] focus:ring-[var(--ui-accent, #B8933E)] accent-[var(--ui-accent, #B8933E)] cursor-pointer"
+                />
+                <div>
+                  <span className="text-xs font-bold text-zinc-800 block">Build with AI Assistant</span>
+                  <span className="text-[10px] text-zinc-400 block mt-0.5">Parse BOQ texts and emails to auto-populate form</span>
                 </div>
-                <span className="text-xs font-bold text-zinc-800 block mb-1">Use AI Assistant</span>
-                <span className="text-[10px] text-zinc-400 leading-tight">Paste a note or BOQ text to parse automatically</span>
-              </div>
+              </label>
               
               {/* Option 2: Build Yourself */}
-              <div 
-                onClick={() => {
-                  handleStartManualQuote();
-                }}
-                className="border-2 border-dashed border-zinc-200 hover:border-zinc-500 rounded-xl p-4 cursor-pointer transition-all hover:bg-zinc-50 flex flex-col items-center group text-center"
+              <label 
+                className={`flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition-all ${newQuoteOption === 'manual' ? 'border-[var(--ui-accent, #B8933E)] bg-zinc-50/50' : 'border-zinc-200 hover:bg-zinc-50/30'}`}
+                onClick={() => setNewQuoteOption('manual')}
               >
-                <div className="h-10 w-10 rounded-lg bg-zinc-100 text-zinc-650 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                  <FileText size={20} />
+                <input 
+                  type="radio" 
+                  name="newQuoteMode" 
+                  value="manual" 
+                  checked={newQuoteOption === 'manual'} 
+                  onChange={() => setNewQuoteOption('manual')}
+                  className="w-4 h-4 text-[var(--ui-accent, #B8933E)] focus:ring-[var(--ui-accent, #B8933E)] accent-[var(--ui-accent, #B8933E)] cursor-pointer"
+                />
+                <div>
+                  <span className="text-xs font-bold text-zinc-800 block">Self Build / Build Manually</span>
+                  <span className="text-[10px] text-zinc-400 block mt-0.5">Fill out quotes, rates, and terms manually</span>
                 </div>
-                <span className="text-xs font-bold text-zinc-800 block mb-1">Build Yourself</span>
-                <span className="text-[10px] text-zinc-400 leading-tight">Type out the client, items and rates manually</span>
-              </div>
+              </label>
             </div>
             
-            <div className="text-center">
+            <div className="flex gap-2">
               <button 
+                type="button" 
                 onClick={() => setShowNewQuoteModal(false)}
-                className="text-[11px] text-zinc-400 hover:text-zinc-600 font-bold uppercase tracking-wider transition-colors cursor-pointer"
-                style={{ background: 'none', border: 'none' }}
+                className="btn-outline flex-1 py-2 text-xs font-bold rounded-lg cursor-pointer text-center justify-center"
               >
                 Cancel
+              </button>
+              <button 
+                type="button" 
+                onClick={() => {
+                  if (newQuoteOption === 'ai') {
+                    handleStartAIQuote();
+                  } else {
+                    handleStartManualQuote();
+                  }
+                }}
+                className="btn flex-1 py-2 text-white text-xs font-bold rounded-lg cursor-pointer text-center justify-center"
+                style={{ width: 'auto' }}
+              >
+                Proceed
               </button>
             </div>
           </div>
