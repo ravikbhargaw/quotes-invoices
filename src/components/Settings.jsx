@@ -354,11 +354,23 @@ export default function Settings({ settings, onSaveSettings, currentUserEmail })
           <div className="space-y-3.5">
             <div>
               <h3 className="text-xs font-bold text-zinc-800 uppercase tracking-wide">AI Engine Keys</h3>
-              <p className="text-[10px] text-[var(--ui-text-muted)] mt-0.5">Configure API keys for different AI models.</p>
+              <p className="text-[10px] text-[var(--ui-text-muted)] mt-0.5">Configure API keys for different AI models. Click the link to get a key.</p>
             </div>
 
             <div className="form-group">
-              <label className="input-label">Gemini API Key</label>
+              <div className="flex justify-between items-center mb-1.5">
+                <label className="input-label mb-0">Gemini API Key</label>
+                <a 
+                  href="https://aistudio.google.com/app/apikey" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  style={{ fontSize: '9px', fontWeight: '700', color: 'var(--ui-accent)', textDecoration: 'none', letterSpacing: '0.04em' }}
+                  onMouseOver={(e) => e.target.style.textDecoration = 'underline'}
+                  onMouseOut={(e) => e.target.style.textDecoration = 'none'}
+                >
+                  Get Key → Google AI Studio
+                </a>
+              </div>
               <input 
                 type="password" 
                 value={localSettings.geminiApiKey || ''} 
@@ -369,7 +381,19 @@ export default function Settings({ settings, onSaveSettings, currentUserEmail })
             </div>
 
             <div className="form-group">
-              <label className="input-label">OpenAI API Key</label>
+              <div className="flex justify-between items-center mb-1.5">
+                <label className="input-label mb-0">OpenAI API Key</label>
+                <a 
+                  href="https://platform.openai.com/api-keys" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  style={{ fontSize: '9px', fontWeight: '700', color: 'var(--ui-accent)', textDecoration: 'none', letterSpacing: '0.04em' }}
+                  onMouseOver={(e) => e.target.style.textDecoration = 'underline'}
+                  onMouseOut={(e) => e.target.style.textDecoration = 'none'}
+                >
+                  Get Key → OpenAI Platform
+                </a>
+              </div>
               <input 
                 type="password" 
                 value={localSettings.openaiApiKey || ''} 
@@ -380,7 +404,19 @@ export default function Settings({ settings, onSaveSettings, currentUserEmail })
             </div>
 
             <div className="form-group">
-              <label className="input-label">Anthropic API Key</label>
+              <div className="flex justify-between items-center mb-1.5">
+                <label className="input-label mb-0">Anthropic API Key</label>
+                <a 
+                  href="https://console.anthropic.com/settings/keys" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  style={{ fontSize: '9px', fontWeight: '700', color: 'var(--ui-accent)', textDecoration: 'none', letterSpacing: '0.04em' }}
+                  onMouseOver={(e) => e.target.style.textDecoration = 'underline'}
+                  onMouseOut={(e) => e.target.style.textDecoration = 'none'}
+                >
+                  Get Key → Anthropic Console
+                </a>
+              </div>
               <input 
                 type="password" 
                 value={localSettings.anthropicApiKey || ''} 
@@ -391,7 +427,19 @@ export default function Settings({ settings, onSaveSettings, currentUserEmail })
             </div>
 
             <div className="form-group">
-              <label className="input-label">xAI API Key (Grok)</label>
+              <div className="flex justify-between items-center mb-1.5">
+                <label className="input-label mb-0">xAI API Key (Grok)</label>
+                <a 
+                  href="https://console.x.ai" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  style={{ fontSize: '9px', fontWeight: '700', color: 'var(--ui-accent)', textDecoration: 'none', letterSpacing: '0.04em' }}
+                  onMouseOver={(e) => e.target.style.textDecoration = 'underline'}
+                  onMouseOut={(e) => e.target.style.textDecoration = 'none'}
+                >
+                  Get Key → xAI Console
+                </a>
+              </div>
               <input 
                 type="password" 
                 value={localSettings.xaiApiKey || ''} 
