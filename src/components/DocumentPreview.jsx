@@ -847,49 +847,54 @@ export default function DocumentPreview({ quote, settings }) {
         borderBottomRightRadius: '12px',
         overflow: 'hidden'
       }}>
-        {/* Horizontal Bank Details Grid */}
+        {/* Left-aligned Bank Details Row */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: '1.3fr 1fr 1fr 0.8fr 1fr',
-          gap: '12px',
+          gridTemplateColumns: '180px 1fr',
+          gap: '6px 0',
+          fontFamily: 'Inter, sans-serif',
+          fontSize: '11px',
+          lineHeight: '1.6',
+          color: '#FFFFFF',
           width: '100%',
-          textAlign: 'center',
-          borderBottom: '1px solid rgba(233, 214, 166, 0.15)',
-          paddingBottom: '14px',
-          marginBottom: '12px'
+          maxWidth: '520px',
+          margin: '0 auto 16px 0',
+          textAlign: 'left'
         }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-            <span style={{ fontSize: '7.5px', color: '#B9C2D6', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Beneficiary Name</span>
-            <span style={{ fontSize: '10px', color: '#FFFFFF', fontWeight: '600' }}>{settings.bankDetails?.name || 'MEAVEN DESIGNS PRIVATE LIMITED'}</span>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-            <span style={{ fontSize: '7.5px', color: '#B9C2D6', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Account Number</span>
-            <span style={{ fontSize: '10px', color: '#FFFFFF', fontWeight: '600', fontFamily: 'JetBrains Mono, monospace' }}>{settings.bankDetails?.accountNo || '50200097556307'}</span>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-            <span style={{ fontSize: '7.5px', color: '#B9C2D6', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Bank / Branch</span>
-            <span style={{ fontSize: '10px', color: '#FFFFFF', fontWeight: '600' }}>{settings.bankDetails?.bankName || 'HDFC Bank, Marathahalli'}</span>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-            <span style={{ fontSize: '7.5px', color: '#B9C2D6', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>IFSC Code</span>
-            <span style={{ fontSize: '10px', color: '#E9D6A6', fontWeight: '700', fontFamily: 'JetBrains Mono, monospace' }}>{settings.bankDetails?.ifsc || 'HDFC0001756'}</span>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-            <span style={{ fontSize: '7.5px', color: '#B9C2D6', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>GSTIN</span>
-            <span style={{ fontSize: '10px', color: '#E9D6A6', fontWeight: '700', fontFamily: 'JetBrains Mono, monospace' }}>{settings.bankDetails?.gstin || '29AAMCM4939R2ZA'}</span>
-          </div>
+          <span style={{ color: '#B9C2D6', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Beneficiary Name:</span>
+          <span>{settings.bankDetails?.name || 'MEAVEN DESIGNS PRIVATE LIMITED'}</span>
+          
+          <span style={{ color: '#B9C2D6', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Account Number:</span>
+          <span style={{ fontFamily: 'JetBrains Mono, monospace' }}>{settings.bankDetails?.accountNo || '50200097556307'}</span>
+          
+          <span style={{ color: '#B9C2D6', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Bank / Branch:</span>
+          <span>{settings.bankDetails?.bankName || 'HDFC Bank, Marathahalli'}</span>
+          
+          <span style={{ color: '#B9C2D6', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.04em' }}>IFSC:</span>
+          <span style={{ color: '#E9D6A6', fontWeight: '700', fontFamily: 'JetBrains Mono, monospace' }}>{settings.bankDetails?.ifsc || 'HDFC0001756'}</span>
+          
+          <span style={{ color: '#B9C2D6', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.04em' }}>GSTIN:</span>
+          <span style={{ color: '#E9D6A6', fontWeight: '700', fontFamily: 'JetBrains Mono, monospace' }}>{settings.bankDetails?.gstin || '29AAMCM4939R2ZA'}</span>
         </div>
 
-        {/* System generated note */}
-        <p style={{
-          fontFamily: 'Inter, sans-serif',
-          fontSize: '8.5px',
-          color: '#B9C2D6',
-          letterSpacing: '0.04em',
-          margin: 0
+        {/* Divider and System generated note */}
+        <div style={{
+          borderTop: '1px solid rgba(233, 214, 166, 0.15)',
+          paddingTop: '12px',
+          marginTop: '16px',
+          width: '100%',
+          textAlign: 'center'
         }}>
-          Note: This is a system generated quote and doesn't need a signature.
-        </p>
+          <p style={{
+            fontFamily: 'Inter, sans-serif',
+            fontSize: '8.5px',
+            color: '#B9C2D6',
+            letterSpacing: '0.04em',
+            margin: 0
+          }}>
+            Note: This is a system generated quote and doesn't need a signature.
+          </p>
+        </div>
       </div>
     </div>
   );
