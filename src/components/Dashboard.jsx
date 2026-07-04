@@ -43,8 +43,13 @@ export default function Dashboard({
 
     // Sort descending by updated_at / created_at timestamp to ensure the newest is always on top
     return filtered.sort((a, b) => {
-      const timeA = new Date(a.updated_at || a.created_at || a.date || 0).getTime();
-      const timeB = new Date(b.updated_at || b.created_at || b.date || 0).getTime();
+      const getVal = (val) => {
+        if (!val) return 0;
+        const parsed = new Date(val).getTime();
+        return isNaN(parsed) ? 0 : parsed;
+      };
+      const timeA = getVal(a.updated_at) || getVal(a.created_at) || getVal(a.date);
+      const timeB = getVal(b.updated_at) || getVal(b.created_at) || getVal(b.date);
       return timeB - timeA;
     });
   }, [quotes, searchTerm, statusFilter]);

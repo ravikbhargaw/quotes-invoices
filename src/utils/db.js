@@ -305,6 +305,7 @@ function saveLocalClients(clients) {
 
 // Get Clients list
 export async function getClients() {
+  const localClients = getLocalClients();
   const supabase = getSupabase();
   if (supabase) {
     try {
@@ -313,13 +314,20 @@ export async function getClients() {
         .select('*')
         .order('name', { ascending: true });
       if (error) throw error;
-      return data || [];
+      const dbClients = data || [];
+      const merged = [...dbClients];
+      for (const lc of localClients) {
+        if (!merged.some(mc => mc.id === lc.id || mc.name?.toLowerCase() === lc.name?.toLowerCase())) {
+          merged.push(lc);
+        }
+      }
+      return merged;
     } catch (e) {
       console.error('Failed to fetch clients from Supabase, falling back to local', e);
-      return getLocalClients();
+      return localClients;
     }
   }
-  return getLocalClients();
+  return localClients;
 }
 
 // Save Client (Create or Update)
@@ -423,6 +431,7 @@ function saveLocalQuotes(quotes) {
 
 // Get Quotes list
 export async function getQuotes() {
+  const localQuotes = getLocalQuotes();
   const supabase = getSupabase();
   if (supabase) {
     try {
@@ -431,8 +440,8 @@ export async function getQuotes() {
         .select('*')
         .order('created_at', { ascending: false });
       if (error) throw error;
-      const quotes = data || [];
-      return quotes.map(q => {
+      const dbQuotes = data || [];
+      const normalizedDb = dbQuotes.map(q => {
         const cleanTerms = normalizeArray(q.terms).filter(term => !term.toLowerCase().includes('attached') && !term.toLowerCase().includes('image'));
         const cleanNotes = normalizeArray(q.notes).filter(note => !note.toLowerCase().includes('attached') && !note.toLowerCase().includes('image'));
         return {
@@ -444,12 +453,20 @@ export async function getQuotes() {
           timeline_steps: normalizeArray(q.timeline_steps || q.timelineSteps).length > 0 ? normalizeArray(q.timeline_steps || q.timelineSteps) : [...DEFAULT_SETTINGS.timelineSteps]
         };
       });
+
+      const merged = [...normalizedDb];
+      for (const lq of localQuotes) {
+        if (!merged.some(mq => mq.id === lq.id || mq.quote_number === lq.quote_number)) {
+          merged.push(lq);
+        }
+      }
+      return merged;
     } catch (e) {
       console.error('Failed to fetch quotes from Supabase, falling back to local', e);
-      return getLocalQuotes();
+      return localQuotes;
     }
   }
-  return getLocalQuotes();
+  return localQuotes;
 }
 
 // Save Quote (Create or Update)
