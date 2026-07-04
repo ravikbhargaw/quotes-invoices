@@ -1060,6 +1060,10 @@ body {
   /* Prevent mid-section page breaks */
   .line-item,
   .payment-card,
+  .timeline-card,
+  .payment-milestone-card,
+  .notes-card,
+  .terms-card,
   .doc-header,
   .doc-footer,
   .comparison-row,
@@ -1068,6 +1072,12 @@ body {
   .totals-grid {
     page-break-inside: avoid !important;
     break-inside: avoid !important;
+  }
+
+  /* Prevent headings from being left alone at the bottom of pages */
+  h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid !important;
+    break-after: avoid !important;
   }
 
   .doc-items-header {

@@ -686,7 +686,7 @@ export default function DocumentPreview({ quote, settings }) {
               const title = hasColon ? step.split(':')[0] : `Step ${sidx + 1}`;
               const desc = hasColon ? step.split(':').slice(1).join(':') : step;
               return (
-                <div key={sidx} style={{ 
+                <div key={sidx} className="timeline-card" style={{ 
                   background: colors.card, 
                   border: `1px solid ${colors.lineSoft}`, 
                   borderRadius: '14px', 
@@ -728,6 +728,7 @@ export default function DocumentPreview({ quote, settings }) {
               return (
                 <div 
                   key={idx} 
+                  className="payment-milestone-card"
                   style={{ 
                     background: colors.card, 
                     border: `1px solid ${colors.lineSoft}`, 
@@ -776,7 +777,7 @@ export default function DocumentPreview({ quote, settings }) {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
           
           {/* Notes Card */}
-          <div style={{ 
+          <div className="notes-card" style={{ 
             background: colors.card, 
             borderRadius: '14px', 
             border: `1px solid ${colors.lineSoft}`, 
@@ -805,7 +806,7 @@ export default function DocumentPreview({ quote, settings }) {
           </div>
 
           {/* Terms Card */}
-          <div style={{ 
+          <div className="terms-card" style={{ 
             background: colors.card, 
             borderRadius: '14px', 
             border: `1px solid ${colors.lineSoft}`, 
