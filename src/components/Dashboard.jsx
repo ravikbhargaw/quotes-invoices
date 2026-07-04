@@ -307,22 +307,14 @@ export default function Dashboard({
                 </div>
 
                 {/* Row 4 — Action bar */}
-                <div className="flex" style={{
+                <div className="flex items-stretch" style={{
                   border: '1px solid #EAE5D8',
                   borderRadius: '10px',
                   overflow: 'hidden'
                 }}>
                   <button 
                     onClick={() => onEditQuote(q)}
-                    className="flex-grow flex-1 flex items-center justify-center gap-[6px] py-[7px] text-[#12213F] bg-transparent border-r border-[#EAE5D8] hover:bg-[#FBF6EA] hover:text-[#8A6417] transition-colors cursor-pointer outline-none"
-                    style={{
-                      fontFamily: 'Inter, sans-serif',
-                      fontWeight: 600,
-                      fontSize: '11.5px',
-                      borderTop: 'none',
-                      borderLeft: 'none',
-                      borderBottom: 'none'
-                    }}
+                    className="flex-1 flex items-center justify-center gap-[6px] m-0 py-[7px] px-0 bg-transparent border-t-0 border-b-0 border-l-0 border-r border-[#EAE5D8] text-[#12213F] hover:bg-[#FBF6EA] hover:text-[#8A6417] transition-all duration-150 cursor-pointer outline-none shadow-none font-sans font-semibold text-[11.5px]"
                     title="Load & Edit Quote"
                   >
                     <Edit3 size={13} strokeWidth={2} stroke="currentColor" /> Load
@@ -330,16 +322,7 @@ export default function Dashboard({
 
                   <button 
                     onClick={() => onDuplicateQuote(q)}
-                    className="flex-grow flex-1 flex items-center justify-center gap-[6px] py-[7px] text-[#12213F] bg-transparent hover:bg-[#FBF6EA] hover:text-[#8A6417] transition-colors cursor-pointer outline-none"
-                    style={{
-                      fontFamily: 'Inter, sans-serif',
-                      fontWeight: 600,
-                      fontSize: '11.5px',
-                      borderTop: 'none',
-                      borderLeft: 'none',
-                      borderBottom: 'none',
-                      borderRight: isAdmin ? '1px solid #EAE5D8' : 'none'
-                    }}
+                    className={`flex-grow flex-1 flex items-center justify-center gap-[6px] m-0 py-[7px] px-0 bg-transparent text-[#12213F] hover:bg-[#FBF6EA] hover:text-[#8A6417] transition-all duration-150 cursor-pointer outline-none shadow-none font-sans font-semibold text-[11.5px] border-t-0 border-b-0 border-l-0 ${isAdmin ? 'border-r border-[#EAE5D8]' : 'border-none'}`}
                     title="Duplicate Quote"
                   >
                     <Copy size={13} strokeWidth={2} stroke="currentColor" /> Duplicate
@@ -348,8 +331,7 @@ export default function Dashboard({
                   {isAdmin && (
                     <button 
                       onClick={() => onDeleteQuote(q.id)}
-                      className="w-10 flex-none flex items-center justify-center text-[#9C8A78] bg-transparent hover:bg-[#FBF1EE] hover:text-[#B4483A] transition-colors cursor-pointer border-none outline-none"
-                      style={{ height: '29px' }}
+                      className="w-10 flex-none flex items-center justify-center m-0 p-0 bg-transparent border-none text-[#9C8A78] hover:bg-[#FBF1EE] hover:text-[#B4483A] transition-all duration-150 cursor-pointer outline-none shadow-none"
                       title="Delete Quote"
                     >
                       <Trash2 size={13} strokeWidth={2} stroke="currentColor" />
