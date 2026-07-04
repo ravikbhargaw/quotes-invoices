@@ -68,6 +68,7 @@ Rules:
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('form'); // 'ai', 'form', 'history', 'clients', 'settings'
+  const [isDirty, setIsDirty] = useState(false);
   const [quotes, setQuotes] = useState([]);
   const [clients, setClients] = useState([]);
   const [settings, setSettings] = useState(getCachedSettingsSync());
@@ -100,6 +101,14 @@ export default function App() {
       setLoadingSession(false);
     }
   }, [settings]);
+
+  const navigateToTab = (newTab) => {
+    if (activeTab === 'form' && newTab !== 'form' && isDirty) {
+      const confirmLeave = window.confirm("You have unsaved changes in your active quote. If you leave, you will lose your unsaved edits. Are you sure you want to proceed?");
+      if (!confirmLeave) return;
+    }
+    setActiveTab(newTab);
+  };
 
   const handleForcePasswordReset = async (e) => {
     e.preventDefault();
@@ -276,6 +285,7 @@ export default function App() {
   // Active Quote Field Changer
   const updateQuoteField = (field, val) => {
     setActiveQuote(prev => ({ ...prev, [field]: val }));
+    setIsDirty(true);
   };
 
   // Saved client dropdown selection handler
@@ -288,6 +298,7 @@ export default function App() {
         client_name: client.name,
         gstin: client.gstin || ''
       }));
+      setIsDirty(true);
     }
   };
 
@@ -319,23 +330,27 @@ export default function App() {
       ...prev,
       items: [...(prev.items || []), newItem]
     }));
+    setIsDirty(true);
   };
 
   const handleUpdateItem = (index, field, val) => {
     const list = [...activeQuote.items];
     list[index][field] = val;
     setActiveQuote(prev => ({ ...prev, items: list }));
+    setIsDirty(true);
   };
 
   const handleUpdateItemSpecs = (index, commaString) => {
     const list = [...activeQuote.items];
     list[index].specs = commaString.split(',').map(s => s.trim()).filter(s => s);
     setActiveQuote(prev => ({ ...prev, items: list }));
+    setIsDirty(true);
   };
 
   const handleRemoveItem = (index) => {
     const list = activeQuote.items.filter((_, idx) => idx !== index);
     setActiveQuote(prev => ({ ...prev, items: list }));
+    setIsDirty(true);
   };
 
   const handleMoveItem = (index, direction) => {
@@ -349,6 +364,7 @@ export default function App() {
     list[targetIdx] = temp;
 
     setActiveQuote(prev => ({ ...prev, items: list }));
+    setIsDirty(true);
   };
 
   const handleAddSizeToItem = (idx) => {
@@ -360,12 +376,14 @@ export default function App() {
     setSizeW('');
     setSizeH('');
     setActiveSizeItemIdx(null);
+    setIsDirty(true);
   };
 
   const handleRemoveSizeFromItem = (itemIdx, sizeIdx) => {
     const list = [...activeQuote.items];
     list[itemIdx].sizes = list[itemIdx].sizes.filter((_, idx) => idx !== sizeIdx);
     setActiveQuote(prev => ({ ...prev, items: list }));
+    setIsDirty(true);
   };
 
   // Payment Schedule handlers
@@ -373,6 +391,7 @@ export default function App() {
     const list = [...activeQuote.payment_schedule];
     list[index][field] = field === 'pct' ? (parseFloat(val) || 0) : val;
     setActiveQuote(prev => ({ ...prev, payment_schedule: list }));
+    setIsDirty(true);
   };
 
   const handleAddMilestone = () => {
@@ -380,6 +399,7 @@ export default function App() {
       ...prev,
       payment_schedule: [...(prev.payment_schedule || []), { pct: 10, milestone: 'On day of delivery' }]
     }));
+    setIsDirty(true);
   };
 
   const handleRemoveMilestone = (index) => {
@@ -387,6 +407,7 @@ export default function App() {
       ...prev,
       payment_schedule: prev.payment_schedule.filter((_, idx) => idx !== index)
     }));
+    setIsDirty(true);
   };
 
   // Timeline handlers
@@ -394,6 +415,7 @@ export default function App() {
     const list = [...activeQuote.timeline_steps];
     list[index] = val;
     setActiveQuote(prev => ({ ...prev, timeline_steps: list }));
+    setIsDirty(true);
   };
 
   const handleAddTimelineStep = () => {
@@ -401,6 +423,7 @@ export default function App() {
       ...prev,
       timeline_steps: [...(prev.timeline_steps || []), 'Processing stage: Day X']
     }));
+    setIsDirty(true);
   };
 
   const handleRemoveTimelineStep = (index) => {
@@ -408,12 +431,14 @@ export default function App() {
       ...prev,
       timeline_steps: prev.timeline_steps.filter((_, idx) => idx !== index)
     }));
+    setIsDirty(true);
   };
 
   // Note/terms textarea list updater
   const handleTextareaListChange = (field, textVal) => {
     const list = textVal.split('\n').filter(t => t.trim() !== '');
     setActiveQuote(prev => ({ ...prev, [field]: list }));
+    setIsDirty(true);
   };
 
   // Load Presets in AI Assistant
@@ -829,6 +854,7 @@ Quote:
     if (!parsedAIResult) return;
     setActiveQuote(parsedAIResult);
     setParsedAIResult(null);
+    setIsDirty(true);
     setActiveTab('form');
   };
 
@@ -990,6 +1016,7 @@ Quote:
       tax: 0,
       total: 0
     });
+    setIsDirty(false);
     setActiveTab('form');
   };
 
@@ -1000,6 +1027,7 @@ Quote:
       return;
     }
     await saveQuote(activeQuote);
+    setIsDirty(false);
     alert('Quote saved successfully to database/local history!');
     loadData();
   };
@@ -1202,26 +1230,18 @@ Quote:
       {/* 1. FAR-LEFT VERTICAL NAVIGATION ICON BAR */}
       {!isPrinting && (
         <div className="sidebar-nav no-print">
-        {/* Logo Icon top */}
+        {/* Tab Switchers (AI is first) */}
         <div 
-          onClick={handleResetQuote}
-          className="h-10 w-10 bg-[var(--ui-accent)] rounded-xl flex items-center justify-center text-white font-black font-outfit shadow-md cursor-pointer hover:bg-[var(--ui-accent-hover)] transition-colors mb-4"
-          title="New Quote Template"
-        >
-          M
-        </div>
-
-        {/* Tab Switchers */}
-        <div 
-          onClick={() => setActiveTab('ai')}
+          onClick={() => navigateToTab('ai')}
           className={`nav-item ${activeTab === 'ai' ? 'active' : ''}`}
           data-tooltip="AI Assistant"
+          style={{ marginTop: '8px' }}
         >
           <Sparkles size={20} />
         </div>
 
         <div 
-          onClick={() => setActiveTab('form')}
+          onClick={() => navigateToTab('form')}
           className={`nav-item ${activeTab === 'form' ? 'active' : ''}`}
           data-tooltip="Active Form"
         >
@@ -1229,7 +1249,7 @@ Quote:
         </div>
 
         <div 
-          onClick={() => setActiveTab('history')}
+          onClick={() => navigateToTab('history')}
           className={`nav-item ${activeTab === 'history' ? 'active' : ''}`}
           data-tooltip="Quotes History"
         >
@@ -1237,7 +1257,7 @@ Quote:
         </div>
 
         <div 
-          onClick={() => setActiveTab('clients')}
+          onClick={() => navigateToTab('clients')}
           className={`nav-item ${activeTab === 'clients' ? 'active' : ''}`}
           data-tooltip="Clients CRM"
         >
@@ -1246,7 +1266,7 @@ Quote:
 
         {isAdmin && (
           <div 
-            onClick={() => setActiveTab('settings')}
+            onClick={() => navigateToTab('settings')}
             className={`nav-item ${activeTab === 'settings' ? 'active' : ''}`}
             data-tooltip="Settings"
           >
@@ -1254,9 +1274,29 @@ Quote:
           </div>
         )}
 
-        {/* DB Sync Indicator bottom */}
-        <div className="mt-auto flex flex-col items-center gap-2">
-          <span className="text-[9px] font-bold text-[var(--ui-accent)] tracking-wider">v2.0</span>
+        {/* Bottom actions and indicators */}
+        <div className="mt-auto flex flex-col items-center gap-3">
+          {session && (
+            <div 
+              onClick={async () => {
+                if (activeTab === 'form' && isDirty) {
+                  const confirmLeave = window.confirm("You have unsaved changes in your active quote. If you log out, you will lose your unsaved edits. Are you sure you want to proceed?");
+                  if (!confirmLeave) return;
+                }
+                const supabase = getSupabase();
+                if (supabase) {
+                  await supabase.auth.signOut();
+                  setSession(null);
+                }
+              }}
+              className="nav-item cursor-pointer text-zinc-400 hover:text-red-500"
+              data-tooltip="Log Out"
+              style={{ margin: 0 }}
+            >
+              <LogOut size={20} />
+            </div>
+          )}
+
           {dbConnected ? (
             <div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg border border-emerald-100" title="Supabase Connected">
               <Database size={16} />
@@ -1266,21 +1306,8 @@ Quote:
               <Database size={16} />
             </div>
           )}
-          {session && (
-            <div 
-              onClick={async () => {
-                const supabase = getSupabase();
-                if (supabase) {
-                  await supabase.auth.signOut();
-                  setSession(null);
-                }
-              }}
-              className="nav-item cursor-pointer text-zinc-400 hover:text-red-500 mt-2"
-              data-tooltip="Log Out"
-            >
-              <LogOut size={20} />
-            </div>
-          )}
+
+          <span className="text-[9px] font-bold text-[var(--ui-accent)] tracking-wider">v2.0</span>
         </div>
       </div>
       )}
@@ -1486,56 +1513,23 @@ Quote:
                 <h2><span>Quote</span> Form</h2>
                 <p>Edit quote items and values manually.</p>
               </div>
-              <button
-                onClick={handleSaveQuoteDraft}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--ui-accent)] hover:bg-[var(--ui-accent-hover)] text-white rounded-lg text-xs font-semibold shadow-md transition-colors"
-              >
-                <Save size={12} /> Save Draft
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleResetQuote}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-750 rounded-lg text-xs font-semibold border border-zinc-200 transition-colors shadow-sm"
+                >
+                  <Plus size={12} /> New Quote
+                </button>
+                <button
+                  onClick={handleSaveQuoteDraft}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--ui-accent)] hover:bg-[var(--ui-accent-hover)] text-white rounded-lg text-xs font-semibold shadow-md transition-colors"
+                >
+                  <Save size={12} /> Save Draft
+                </button>
+              </div>
             </div>
             
             <div className="panel-body space-y-4 sub-panel-content">
-              {/* BRANDING LOGO PERSISTENT UPLOADER */}
-              <div className="bg-[var(--ui-card)] border border-[var(--ui-border)] p-3 rounded-lg flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  {settings.companyLogo ? (
-                    <div className="h-10 w-24 border border-zinc-200 rounded bg-white flex items-center justify-center p-1 relative group shrink-0">
-                      <img src={settings.companyLogo} alt="Logo" className="h-full w-full object-contain" />
-                    </div>
-                  ) : (
-                    <div className="h-10 w-24 border border-dashed border-zinc-300 rounded bg-zinc-50 flex items-center justify-center text-[8px] text-zinc-400 font-bold uppercase tracking-wider shrink-0 text-center">
-                      Default Logo
-                    </div>
-                  )}
-                  <div>
-                    <span className="text-[9px] uppercase tracking-wider text-[var(--ui-text-muted)] font-bold block">Company Logo</span>
-                    <span className="text-[10px] text-zinc-500 block leading-tight">
-                      {settings.companyLogo ? 'Custom logo active' : 'Using default wordmark'}
-                    </span>
-                  </div>
-                </div>
-                
-                <div className="flex gap-2">
-                  <label className="btn-outline px-2 py-1 text-[10px] cursor-pointer">
-                    Upload
-                    <input 
-                      type="file" 
-                      accept="image/*" 
-                      onChange={handleLogoUpload} 
-                      className="hidden" 
-                    />
-                  </label>
-                  {settings.companyLogo && (
-                    <button
-                      type="button"
-                      onClick={handleResetLogo}
-                      className="text-[10px] text-rose-600 hover:underline font-semibold"
-                    >
-                      Reset
-                    </button>
-                  )}
-                </div>
-              </div>
 
               {/* Client Dropdown selector */}
               <div className="form-group">
@@ -2256,6 +2250,7 @@ Quote:
                 clients={clients}
                 onEditQuote={(q) => {
                   setActiveQuote({ ...q });
+                  setIsDirty(false);
                   setActiveTab('form');
                 }}
                 onDuplicateQuote={handleDuplicateQuote}

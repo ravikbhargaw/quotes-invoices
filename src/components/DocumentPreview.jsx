@@ -114,110 +114,243 @@ export default function DocumentPreview({ quote, settings }) {
   return (
     <div className="doc-container" id="docCanvas" style={{ background: colors.paper, color: colors.ink, fontFamily: 'Inter, sans-serif' }}>
       
-      {/* A. HEADER (Dark navy deep background, rounded bottom corners) */}
+      {/* A. HEADER — exact spec from Antigravity_Prompt_Header_Exact_Spec.md */}
       <div className="doc-header" style={{ 
-        background: colors.navyDeep, 
+        background: 'linear-gradient(160deg, #0D1B33 0%, #16294A 100%)',
         color: '#FFFFFF', 
-        padding: '32px 32px', 
-        borderBottomLeftRadius: '14px', 
-        borderBottomRightRadius: '14px',
-        textAlign: 'left'
+        padding: '40px 44px 34px 44px',
+        borderTopLeftRadius: '0',
+        borderTopRightRadius: '0',
+        borderBottomLeftRadius: '20px', 
+        borderBottomRightRadius: '20px',
+        position: 'relative',
+        overflow: 'hidden'
       }}>
-        {/* Top Header Row */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '24px' }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
-              {settings.companyLogo ? (
+
+        {/* Decorative glow — top-right corner, bleeds off edge */}
+        <div style={{
+          position: 'absolute',
+          width: '220px',
+          height: '220px',
+          top: '-60px',
+          right: '-60px',
+          borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(189,140,46,0.18) 0%, transparent 70%)',
+          zIndex: 0,
+          pointerEvents: 'none'
+        }} />
+
+        {/* All content above the glow */}
+        <div style={{ position: 'relative', zIndex: 1 }}>
+
+          {/* ROW 1: Brand (left) + Proposal meta (right) */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '20px' }}>
+
+            {/* LEFT: Brand block — logo on top, sub-label below, column layout */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '6px' }}>
+
+              {/* Logo image (if uploaded) */}
+              {settings.companyLogo && (
                 <img 
                   src={settings.companyLogo} 
-                  alt="meaven.in Logo" 
-                  style={{ height: `${settings.logoHeight || 38}px`, objectFit: 'contain' }}
+                  alt="Company Logo"
+                  style={{ height: `${settings.logoHeight || 38}px`, objectFit: 'contain', display: 'block' }}
                 />
-              ) : (
-                <span style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '24px', fontWeight: '800', letterSpacing: '-0.02em', color: '#FFFFFF' }}>
-                  meaven<span style={{ color: colors.goldSoft }}>.in</span>
+              )}
+
+              {/* Diamond-M fallback (only when no logo) */}
+              {!settings.companyLogo && (
+                <div style={{
+                  width: '34px',
+                  height: '34px',
+                  border: '1.6px solid #E9D6A6',
+                  borderRadius: '4px',
+                  transform: 'rotate(45deg)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0
+                }}>
+                  <span style={{
+                    fontFamily: 'Plus Jakarta Sans, sans-serif',
+                    fontWeight: '800',
+                    fontSize: '14px',
+                    color: '#E9D6A6',
+                    transform: 'rotate(-45deg)',
+                    display: 'block',
+                    lineHeight: 1
+                  }}>M</span>
+                </div>
+              )}
+
+              {/* Sub-label: directly below logo, left-aligned */}
+              <span style={{
+                fontFamily: 'Inter, sans-serif',
+                fontSize: '9px',
+                color: '#B9C2D6',
+                letterSpacing: '1.5px',
+                textTransform: 'uppercase'
+              }}>
+                Glass &amp; Aluminium Execution
+              </span>
+            </div>
+
+            {/* RIGHT: Proposal meta — text-align right */}
+            <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+              {/* Line 1: PROPOSAL label */}
+              <span style={{
+                fontFamily: 'Inter, sans-serif',
+                fontSize: '10.5px',
+                fontWeight: '600',
+                letterSpacing: '2px',
+                color: '#E9D6A6',
+                textTransform: 'uppercase'
+              }}>
+                {quote.format === 'proposal' ? 'Proposal' : 'Estimate'}
+              </span>
+
+              {/* Line 2: Number · Date */}
+              <span style={{
+                fontFamily: 'Inter, sans-serif',
+                fontSize: '13px',
+                fontWeight: '400',
+                color: '#D7DDEB',
+                marginTop: '4px'
+              }}>
+                {quoteNumber || '—'} · {displayDate()}
+              </span>
+
+              {/* Line 3: Validity pill */}
+              {quote.validity && (
+                <span style={{
+                  display: 'inline-block',
+                  marginTop: '10px',
+                  background: 'rgba(189,140,46,0.18)',
+                  border: '1px solid rgba(233,214,166,0.4)',
+                  color: '#E9D6A6',
+                  fontSize: '11px',
+                  fontWeight: '600',
+                  letterSpacing: '0.5px',
+                  padding: '5px 12px',
+                  borderRadius: '100px',
+                  textTransform: 'uppercase'
+                }}>
+                  {(() => {
+                    const days = parseInt(quote.validity) || 15;
+                    if (quote.date) {
+                      const expiry = new Date(quote.date);
+                      expiry.setDate(expiry.getDate() + days);
+                      const expiryStr = expiry.toLocaleDateString('en-GB', { day: 'numeric', month: 'long' });
+                      return `Valid ${days} Days · Until ${expiryStr}`;
+                    }
+                    return `Valid ${quote.validity}`;
+                  })()}
                 </span>
               )}
             </div>
-            <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '9px', fontWeight: '700', letterSpacing: '0.08em', color: colors.goldSoft, opacity: 0.8 }}>
-              GLASS &amp; ALUMINIUM EXECUTION
-            </span>
           </div>
 
-          <div style={{ textAlign: 'right' }}>
-            <span style={{ 
-              fontFamily: 'Plus Jakarta Sans, sans-serif', 
-              fontSize: '11px', 
-              fontWeight: '800', 
-              background: 'rgba(233, 214, 166, 0.1)', 
-              color: colors.goldSoft, 
-              padding: '4px 10px', 
-              borderRadius: '2px', 
-              textTransform: 'uppercase', 
-              letterSpacing: '0.1em'
-            }}>
-              {quote.format === 'proposal' ? 'Project Proposal' : 'Commercial Estimate'}
-            </span>
-            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '11px', color: '#FFFFFF', marginTop: '10px', opacity: 0.9 }}>
-              No: {quoteNumber || '—'}
-            </div>
-            {quote.validity && (
-              <span style={{ 
-                display: 'inline-block', 
-                fontSize: '8px', 
-                fontWeight: '700', 
-                color: colors.navyDeep, 
-                background: colors.goldSoft, 
-                padding: '2px 8px', 
-                borderRadius: '10px', 
-                marginTop: '6px', 
-                textTransform: 'uppercase', 
-                letterSpacing: '0.05em' 
+          {/* ROW 2: Subject line — margin-top 30px from Row 1 */}
+          {quote.reference && (
+            <div style={{ marginTop: '30px' }}>
+              <span style={{
+                display: 'block',
+                fontFamily: 'Inter, sans-serif',
+                fontSize: '10.5px',
+                fontWeight: '600',
+                letterSpacing: '2px',
+                color: '#8D9BBB',
+                textTransform: 'uppercase',
+                marginBottom: '6px'
               }}>
-                VALID {quote.validity}
+                Subject / Project Reference
               </span>
-            )}
-          </div>
-        </div>
+              <h1 style={{
+                fontFamily: 'Plus Jakarta Sans, sans-serif',
+                fontSize: '24px',
+                fontWeight: '700',
+                lineHeight: 1.3,
+                color: '#FFFFFF',
+                margin: 0,
+                maxWidth: '560px'
+              }}>
+                {quote.reference}
+              </h1>
+            </div>
+          )}
 
-        {/* Project Reference Line */}
-        {quote.reference && (
-          <div style={{ 
-            borderTop: '1px solid rgba(255, 255, 255, 0.1)', 
-            paddingTop: '16px', 
-            marginBottom: '16px' 
+          {/* ROW 3: Facts row — border-top divider, flex with fixed 40px gap (NOT space-between) */}
+          <div style={{
+            marginTop: '26px',
+            borderTop: '1px solid rgba(255,255,255,0.12)',
+            paddingTop: '22px',
+            display: 'flex',
+            flexDirection: 'row',
+            gap: '40px',
+            flexWrap: 'wrap'
           }}>
-            <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '9px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.08em', color: colors.goldSoft, opacity: 0.7, display: 'block', marginBottom: '2px' }}>
-              Subject / Project Reference
-            </span>
-            <h1 style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '18px', fontWeight: '700', color: '#FFFFFF', margin: 0 }}>
-              {quote.reference}
-            </h1>
-          </div>
-        )}
+            {/* Fact: Billed To */}
+            <div>
+              <span style={{
+                display: 'block',
+                fontFamily: 'Inter, sans-serif',
+                fontSize: '10px',
+                fontWeight: '600',
+                letterSpacing: '1.5px',
+                color: '#8D9BBB',
+                textTransform: 'uppercase',
+                marginBottom: '4px'
+              }}>Billed To</span>
+              <span style={{
+                fontFamily: 'Plus Jakarta Sans, sans-serif',
+                fontSize: '14.5px',
+                fontWeight: '600',
+                color: '#FFFFFF'
+              }}>{quote.client_name || '—'}</span>
+            </div>
 
-        {/* Facts row */}
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: '1.2fr 1fr 1fr', 
-          gap: '16px', 
-          borderTop: '1px solid rgba(255, 255, 255, 0.1)', 
-          paddingTop: '16px',
-          fontSize: '11px'
-        }}>
-          <div>
-            <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '9px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.08em', color: colors.goldSoft, opacity: 0.7, display: 'block', marginBottom: '2px' }}>Billed To</span>
-            <strong style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '13px', fontWeight: '700', color: '#FFFFFF' }}>{quote.client_name || '—'}</strong>
+            {/* Fact: Date Issued */}
+            <div>
+              <span style={{
+                display: 'block',
+                fontFamily: 'Inter, sans-serif',
+                fontSize: '10px',
+                fontWeight: '600',
+                letterSpacing: '1.5px',
+                color: '#8D9BBB',
+                textTransform: 'uppercase',
+                marginBottom: '4px'
+              }}>Date Issued</span>
+              <span style={{
+                fontFamily: 'Plus Jakarta Sans, sans-serif',
+                fontSize: '14.5px',
+                fontWeight: '600',
+                color: '#FFFFFF'
+              }}>{displayDate()}</span>
+            </div>
+
+            {/* Fact: Client GSTIN */}
+            <div>
+              <span style={{
+                display: 'block',
+                fontFamily: 'Inter, sans-serif',
+                fontSize: '10px',
+                fontWeight: '600',
+                letterSpacing: '1.5px',
+                color: '#8D9BBB',
+                textTransform: 'uppercase',
+                marginBottom: '4px'
+              }}>Client GSTIN</span>
+              <span style={{
+                fontFamily: 'JetBrains Mono, monospace',
+                fontSize: '14.5px',
+                fontWeight: '600',
+                color: '#FFFFFF'
+              }}>{quote.gstin || '—'}</span>
+            </div>
           </div>
-          <div>
-            <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '9px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.08em', color: colors.goldSoft, opacity: 0.7, display: 'block', marginBottom: '2px' }}>Client GSTIN</span>
-            <span style={{ fontFamily: 'JetBrains Mono, monospace', color: '#FFFFFF', opacity: 0.9 }}>{quote.gstin || '—'}</span>
-          </div>
-          <div>
-            <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '9px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.08em', color: colors.goldSoft, opacity: 0.7, display: 'block', marginBottom: '2px' }}>Date Issued</span>
-            <span style={{ fontFamily: 'Inter, sans-serif', color: '#FFFFFF', opacity: 0.9 }}>{displayDate()}</span>
-          </div>
-        </div>
+
+        </div>{/* end z-index wrapper */}
       </div>
 
       {/* B. EXECUTIVE SUMMARY */}
@@ -748,25 +881,12 @@ export default function DocumentPreview({ quote, settings }) {
           </div>
         </div>
 
-        {/* Corporate Address strip */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          fontSize: '9.5px',
-          color: colors.inkSoft,
-          paddingTop: '16px',
-          fontFamily: 'JetBrains Mono, monospace',
-          borderTop: `1px solid ${colors.line}`
-        }}>
-          <span>GSTIN: {settings.bankDetails?.gstin || '29AAMCM4939R2ZA'} · {settings.bankDetails?.address || 'Bangalore'}</span>
-        </div>
+
 
         {/* System generated note */}
         <div style={{
           textAlign: 'center',
-          paddingTop: '16px',
-          borderTop: `1px solid ${colors.line}`,
-          marginTop: '16px'
+          paddingTop: '16px'
         }}>
           <p style={{
             fontFamily: 'Inter, sans-serif',

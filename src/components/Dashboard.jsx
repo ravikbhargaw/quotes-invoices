@@ -15,7 +15,6 @@ export default function Dashboard({
 }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
-  const [formatFilter, setFormatFilter] = useState('All');
 
   // Stats Calculations (Compact)
   const stats = useMemo(() => {
@@ -38,9 +37,8 @@ export default function Dashboard({
         (q.reference && q.reference.toLowerCase().includes(searchTerm.toLowerCase()));
       
       const matchesStatus = statusFilter === 'All' || q.status === statusFilter;
-      const matchesFormat = formatFilter === 'All' || q.format === formatFilter;
 
-      return matchesSearch && matchesStatus && matchesFormat;
+      return matchesSearch && matchesStatus;
     });
 
     // Sort descending by date, fallback to ID
@@ -52,7 +50,7 @@ export default function Dashboard({
       }
       return dateB - dateA;
     });
-  }, [quotes, searchTerm, statusFilter, formatFilter]);
+  }, [quotes, searchTerm, statusFilter]);
 
   const getStatusStyle = (status) => {
     switch (status) {
@@ -87,36 +85,25 @@ export default function Dashboard({
         </div>
       </div>
 
-      {/* Filters Bar (Stacked for Sidebar) */}
+      {/* Filters Bar (Side-by-side for Sidebar) */}
       <div className="bg-[var(--ui-card)] border border-[var(--ui-border)] p-3 rounded-lg space-y-2">
-        <div className="relative">
-          <Search className="absolute left-2.5 top-2.5 text-[var(--ui-text-muted)]" size={14} />
-          <input 
-            type="text"
-            placeholder="Search by quote #, client..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="input-field pl-8 text-xs"
-            style={{ padding: '6px 8px 6px 28px' }}
-          />
-        </div>
-        
         <div className="grid grid-cols-2 gap-2">
-          <select
-            value={formatFilter}
-            onChange={(e) => setFormatFilter(e.target.value)}
-            className="input-field cursor-pointer text-xs"
-            style={{ padding: '6px 8px' }}
-          >
-            <option value="All">All Formats</option>
-            <option value="proposal">Proposals</option>
-            <option value="estimate">Estimates</option>
-          </select>
+          <div className="relative">
+            <Search className="absolute left-2.5 top-2.5 text-[var(--ui-text-muted)]" size={14} />
+            <input 
+              type="text"
+              placeholder="Search quote #, client..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="input-field pl-8 text-xs w-full"
+              style={{ padding: '6px 8px 6px 28px' }}
+            />
+          </div>
 
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="input-field cursor-pointer text-xs"
+            className="input-field cursor-pointer text-xs w-full"
             style={{ padding: '6px 8px' }}
           >
             <option value="All">All Statuses</option>
