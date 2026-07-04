@@ -136,70 +136,67 @@ export default function Dashboard({
       ) : (
         <div className="history-list mt-4">
           {filteredQuotes.map((q) => (
-            <div key={q.id} className="quote-card bg-white border border-[var(--ui-border)] rounded-xl p-4 shadow-sm hover:shadow transition-shadow duration-200">
-              
-              {/* Card Metadata List */}
-              <div className="space-y-2 text-xs mb-3.5">
-                
-                {/* 1. Quote Number */}
-                <div className="flex justify-between items-center border-b border-zinc-100 pb-1.5">
-                  <span className="text-[10px] text-[var(--ui-text-muted)] font-semibold uppercase tracking-wider">Quote Number</span>
-                  <span className="font-bold text-zinc-900 font-mono text-[11.5px]">
-                    {q.quote_number}
-                  </span>
-                </div>
+            <div 
+              key={q.id} 
+              className="quote-card bg-white border border-slate-100 rounded-2xl p-5 shadow-[0_2px_8px_rgba(0,0,0,0.02)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.04)] hover:-translate-y-0.5 transition-all duration-200 text-left"
+            >
+              {/* Header Row: Quote Number & Status */}
+              <div className="flex items-center justify-between mb-4">
+                <span className="font-outfit text-sm font-extrabold text-slate-800 tracking-tight">
+                  {q.quote_number}
+                </span>
+                <span 
+                  onClick={() => onToggleStatus && onToggleStatus(q)}
+                  className={`text-[8.5px] px-2.5 py-0.5 rounded-full border font-bold uppercase tracking-wider transition-colors select-none ${getStatusStyle(q.status)}`}
+                  title="Click to toggle status"
+                >
+                  {q.status}
+                </span>
+              </div>
 
-                {/* 2. Customer Name */}
-                <div className="flex justify-between items-center border-b border-zinc-100 pb-1.5">
-                  <span className="text-[10px] text-[var(--ui-text-muted)] font-semibold uppercase tracking-wider">Customer Name</span>
-                  <span className="font-semibold text-zinc-800 text-right max-w-[150px] truncate">
-                    {q.client_name || 'Unnamed Client'}
+              {/* Customer Details section */}
+              <div className="mb-4">
+                <span className="text-[9px] text-slate-400 font-bold uppercase tracking-widest block mb-0.5">
+                  Customer Name
+                </span>
+                <h3 className="text-[13px] font-bold text-slate-800 font-sans leading-snug truncate">
+                  {q.client_name || 'Unnamed Client'}
+                </h3>
+                <div className="flex items-center gap-1.5 mt-1">
+                  <span className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">
+                    Date Created:
                   </span>
-                </div>
-
-                {/* 3. Date Created */}
-                <div className="flex justify-between items-center border-b border-zinc-100 pb-1.5">
-                  <span className="text-[10px] text-[var(--ui-text-muted)] font-semibold uppercase tracking-wider">Date Created</span>
-                  <span className="text-zinc-600 font-medium">
+                  <span className="text-[10.5px] text-slate-600 font-medium font-sans">
                     {q.date || 'No Date'}
                   </span>
                 </div>
+              </div>
 
-                {/* 4. Total Value (EX GST) */}
-                <div className="flex justify-between items-center border-b border-zinc-100 pb-1.5">
-                  <span className="text-[10px] text-[var(--ui-text-muted)] font-semibold uppercase tracking-wider">Total Value (EX GST)</span>
-                  <span className="font-mono text-zinc-700 font-semibold">
+              {/* Financial Box: Premium background container for values */}
+              <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 grid grid-cols-2 gap-3 mb-4">
+                <div>
+                  <span className="text-[9px] text-slate-400 font-bold uppercase tracking-widest block mb-0.5">
+                    Value (EX GST)
+                  </span>
+                  <span className="font-mono text-[11.5px] text-slate-700 font-bold">
                     ₹{Math.round(parseFloat(q.subtotal) || 0).toLocaleString('en-IN')}
                   </span>
                 </div>
-
-                {/* 5. Grand Value (Inc. GST) */}
-                <div className="flex justify-between items-center border-b border-zinc-100 pb-1.5">
-                  <span className="text-[10px] text-[var(--ui-text-muted)] font-semibold uppercase tracking-wider">Grand Value (Inc. GST)</span>
-                  <span className="font-mono text-[var(--ui-accent, #B8933E)] font-bold text-xs">
+                <div className="text-right border-l border-slate-200/60 pl-3">
+                  <span className="text-[9px] text-slate-400 font-bold uppercase tracking-widest block mb-0.5">
+                    Grand (Inc. GST)
+                  </span>
+                  <span className="font-mono text-xs text-[var(--ui-accent, #B8933E)] font-extrabold">
                     ₹{Math.round(parseFloat(q.total) || 0).toLocaleString('en-IN')}
                   </span>
                 </div>
-
-                {/* 6. Status */}
-                <div className="flex justify-between items-center pb-0.5">
-                  <span className="text-[10px] text-[var(--ui-text-muted)] font-semibold uppercase tracking-wider">Status</span>
-                  <span 
-                    onClick={() => onToggleStatus && onToggleStatus(q)}
-                    className={`text-[8.5px] px-2 py-0.5 rounded-full border font-bold uppercase tracking-wider transition-colors select-none ${getStatusStyle(q.status)}`}
-                    title="Click to toggle status"
-                  >
-                    {q.status}
-                  </span>
-                </div>
-
               </div>
 
               {/* Action Buttons Row */}
-              <div className="flex items-center gap-2 border-t border-[var(--ui-border)] pt-2.5">
+              <div className="flex items-center gap-2 border-t border-slate-100 pt-3.5">
                 <button 
                   onClick={() => onEditQuote(q)}
-                  className="flex-1 flex items-center justify-center gap-1.5 bg-zinc-50 border border-zinc-200 text-zinc-700 hover:bg-zinc-100 hover:border-zinc-300 py-1.5 px-3 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors"
+                  className="flex-1 flex items-center justify-center gap-1.5 bg-slate-900 text-white hover:bg-slate-800 py-2 px-3 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-colors shadow-sm"
                   title="Load & Edit Quote"
                 >
                   <Edit3 size={11} /> Load
@@ -207,18 +204,18 @@ export default function Dashboard({
                 
                 <button 
                   onClick={() => onDuplicateQuote(q)}
-                  className="flex-1 flex items-center justify-center gap-1.5 bg-zinc-50 border border-zinc-200 text-zinc-700 hover:bg-zinc-100 hover:border-zinc-300 py-1.5 px-3 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors"
+                  className="flex-1 flex items-center justify-center gap-1.5 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 py-2 px-3 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-colors"
                   title="Duplicate Quote"
                 >
-                  <Copy size={11} /> Dup
+                  <Copy size={11} /> Duplicate
                 </button>
                 
                 {isAdmin && (
                   <button 
                     onClick={() => onDeleteQuote(q.id)}
-                    className="flex-none flex items-center justify-center bg-rose-50 border border-rose-100 text-rose-600 hover:bg-rose-100 hover:text-rose-700 p-1.5 rounded-lg transition-colors"
+                    className="flex-none flex items-center justify-center bg-rose-50 border border-rose-100 text-rose-600 hover:bg-rose-100 hover:text-rose-700 p-2 rounded-xl transition-colors"
                     title="Delete Quote"
-                    style={{ width: '28px', height: '28px' }}
+                    style={{ width: '32px', height: '32px' }}
                   >
                     <Trash2 size={13} />
                   </button>
