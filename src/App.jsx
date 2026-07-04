@@ -2766,17 +2766,66 @@ Quote:
         )}
       </div>
 
-      {/* 4.      {/* 4. NEW QUOTE WIZARD DIALOG OVERLAY */}
+      {/* 4. NEW QUOTE WIZARD DIALOG OVERLAY */}
       {showNewQuoteModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl border border-zinc-200 shadow-2xl p-6 max-w-sm w-full animate-scale-up text-left" style={{ fontFamily: 'Inter, sans-serif' }}>
-            <h3 className="text-md font-extrabold text-zinc-900 mb-1 text-center" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontWeight: '800', letterSpacing: '-0.01em' }}>New Quote Setup</h3>
-            <p className="text-[11px] text-zinc-500 mb-5 text-center">Select your preferred project builder method.</p>
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.55)',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
+          zIndex: 99999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '16px'
+        }}>
+          <div style={{
+            backgroundColor: '#FFFFFF',
+            borderRadius: '16px',
+            border: '1px solid #E2E2DE',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.08)',
+            padding: '24px',
+            maxWidth: '360px',
+            width: '100%',
+            fontFamily: 'Inter, sans-serif',
+            textAlign: 'left'
+          }}>
+            <h3 style={{
+              fontSize: '15px',
+              fontWeight: '800',
+              color: '#1A1A1A',
+              marginBottom: '4px',
+              fontFamily: 'Outfit, sans-serif',
+              textAlign: 'center',
+              textTransform: 'uppercase',
+              letterSpacing: '0.02em'
+            }}>New Quote Setup</h3>
+            <p style={{
+              fontSize: '11px',
+              color: '#6B7280',
+              marginBottom: '20px',
+              textAlign: 'center'
+            }}>Select your preferred project builder method.</p>
             
-            <div className="space-y-3 mb-6">
+            <div style={{ marginBottom: '24px' }}>
               {/* Option 1: AI Assistant */}
               <label 
-                className={`flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition-all ${newQuoteOption === 'ai' ? 'border-[var(--ui-accent, #B8933E)] bg-zinc-50/50' : 'border-zinc-200 hover:bg-zinc-50/30'}`}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  padding: '12px',
+                  border: newQuoteOption === 'ai' ? '1.5px solid var(--ui-accent, #B8933E)' : '1px solid #E2E2DE',
+                  borderRadius: '12px',
+                  cursor: 'pointer',
+                  backgroundColor: newQuoteOption === 'ai' ? '#FBF6EE' : '#FFFFFF',
+                  transition: 'all 0.2s ease',
+                  marginBottom: '10px'
+                }}
                 onClick={() => setNewQuoteOption('ai')}
               >
                 <input 
@@ -2785,17 +2834,32 @@ Quote:
                   value="ai" 
                   checked={newQuoteOption === 'ai'} 
                   onChange={() => setNewQuoteOption('ai')}
-                  className="w-4 h-4 text-[var(--ui-accent, #B8933E)] focus:ring-[var(--ui-accent, #B8933E)] accent-[var(--ui-accent, #B8933E)] cursor-pointer"
+                  style={{
+                    width: '15px',
+                    height: '15px',
+                    accentColor: 'var(--ui-accent, #B8933E)',
+                    cursor: 'pointer'
+                  }}
                 />
                 <div>
-                  <span className="text-xs font-bold text-zinc-800 block">Build with AI Assistant</span>
-                  <span className="text-[10px] text-zinc-400 block mt-0.5">Parse BOQ texts and emails to auto-populate form</span>
+                  <span style={{ fontSize: '12px', fontWeight: '700', color: '#1A1A1A', display: 'block' }}>Build with AI Assistant</span>
+                  <span style={{ fontSize: '10px', color: '#6B7280', display: 'block', marginTop: '2px', lineHeight: '1.3' }}>Parse BOQ texts and emails to auto-populate form</span>
                 </div>
               </label>
               
               {/* Option 2: Build Yourself */}
               <label 
-                className={`flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition-all ${newQuoteOption === 'manual' ? 'border-[var(--ui-accent, #B8933E)] bg-zinc-50/50' : 'border-zinc-200 hover:bg-zinc-50/30'}`}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  padding: '12px',
+                  border: newQuoteOption === 'manual' ? '1.5px solid var(--ui-accent, #B8933E)' : '1px solid #E2E2DE',
+                  borderRadius: '12px',
+                  cursor: 'pointer',
+                  backgroundColor: newQuoteOption === 'manual' ? '#FBF6EE' : '#FFFFFF',
+                  transition: 'all 0.2s ease'
+                }}
                 onClick={() => setNewQuoteOption('manual')}
               >
                 <input 
@@ -2804,20 +2868,26 @@ Quote:
                   value="manual" 
                   checked={newQuoteOption === 'manual'} 
                   onChange={() => setNewQuoteOption('manual')}
-                  className="w-4 h-4 text-[var(--ui-accent, #B8933E)] focus:ring-[var(--ui-accent, #B8933E)] accent-[var(--ui-accent, #B8933E)] cursor-pointer"
+                  style={{
+                    width: '15px',
+                    height: '15px',
+                    accentColor: 'var(--ui-accent, #B8933E)',
+                    cursor: 'pointer'
+                  }}
                 />
                 <div>
-                  <span className="text-xs font-bold text-zinc-800 block">Self Build / Build Manually</span>
-                  <span className="text-[10px] text-zinc-400 block mt-0.5">Fill out quotes, rates, and terms manually</span>
+                  <span style={{ fontSize: '12px', fontWeight: '700', color: '#1A1A1A', display: 'block' }}>Self Build / Build Manually</span>
+                  <span style={{ fontSize: '10px', color: '#6B7280', display: 'block', marginTop: '2px', lineHeight: '1.3' }}>Fill out quotes, rates, and terms manually</span>
                 </div>
               </label>
             </div>
             
-            <div className="flex gap-2">
+            <div style={{ display: 'flex', gap: '8px' }}>
               <button 
                 type="button" 
                 onClick={() => setShowNewQuoteModal(false)}
-                className="btn-outline flex-1 py-2 text-xs font-bold rounded-lg cursor-pointer text-center justify-center"
+                className="btn-outline"
+                style={{ flex: 1, padding: '10px 0', justifyContent: 'center' }}
               >
                 Cancel
               </button>
@@ -2830,8 +2900,8 @@ Quote:
                     handleStartManualQuote();
                   }
                 }}
-                className="btn flex-1 py-2 text-white text-xs font-bold rounded-lg cursor-pointer text-center justify-center"
-                style={{ width: 'auto' }}
+                className="btn"
+                style={{ flex: 1, padding: '10px 0', justifyContent: 'center' }}
               >
                 Proceed
               </button>
