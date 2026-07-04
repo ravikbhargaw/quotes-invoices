@@ -89,48 +89,158 @@ const DEFAULT_SETTINGS = {
   ]
 };
 
+let cachedSettings = null;
+
+export function getCachedSettingsSync() {
+  if (cachedSettings) return cachedSettings;
+  try {
+    const saved = localStorage.getItem('meaven_settings');
+    if (!saved) {
+      cachedSettings = DEFAULT_SETTINGS;
+    } else {
+      let parsed = JSON.parse(saved);
+      // Filter out any "attached images" references permanently
+      if (parsed.notes) {
+        parsed.notes = parsed.notes.filter(note => !note.toLowerCase().includes('attached') && !note.toLowerCase().includes('image'));
+      }
+      if (parsed.terms) {
+        parsed.terms = parsed.terms.filter(term => !term.toLowerCase().includes('attached') && !term.toLowerCase().includes('image'));
+      }
+      cachedSettings = { ...DEFAULT_SETTINGS, ...parsed };
+    }
+  } catch (e) {
+    cachedSettings = DEFAULT_SETTINGS;
+  }
+  return cachedSettings;
+}
+
+const mapDbSettingsToApp = (db) => {
+  if (!db) return DEFAULT_SETTINGS;
+  const settings = getCachedSettingsSync();
+  return {
+    _version: db._version || SETTINGS_VERSION,
+    geminiApiKey: db.gemini_api_key || '',
+    openaiApiKey: db.openai_api_key || '',
+    anthropicApiKey: db.anthropic_api_key || '',
+    xaiApiKey: db.xai_api_key || '',
+    selectedModel: db.selected_model || 'gemini-2.5-flash',
+    supabaseUrl: settings.supabaseUrl || '',
+    supabaseAnonKey: settings.supabaseAnonKey || '',
+    companyLogo: db.company_logo || null,
+    bankDetails: db.bank_details || DEFAULT_SETTINGS.bankDetails,
+    paymentSchedule: db.payment_schedule || DEFAULT_SETTINGS.paymentSchedule,
+    timelineSteps: db.timeline_steps || DEFAULT_SETTINGS.timelineSteps,
+    notes: db.notes || DEFAULT_SETTINGS.notes,
+    terms: db.terms || DEFAULT_SETTINGS.terms,
+    predefinedProducts: db.predefined_products || DEFAULT_SETTINGS.predefinedProducts,
+    logoHeight: db.logo_height || 45,
+    serviceRoleKey: db.service_role_key || ''
+  };
+};
+
+const mapAppSettingsToDb = (app) => {
+  return {
+    id: '00000000-0000-0000-0000-000000000000',
+    gemini_api_key: app.geminiApiKey || '',
+    openai_api_key: app.openaiApiKey || '',
+    anthropic_api_key: app.anthropicApiKey || '',
+    xai_api_key: app.xaiApiKey || '',
+    selected_model: app.selectedModel || 'gemini-2.5-flash',
+    company_logo: app.companyLogo || null,
+    bank_details: app.bankDetails || {},
+    payment_schedule: app.paymentSchedule || [],
+    timeline_steps: app.timelineSteps || [],
+    notes: app.notes || [],
+    terms: app.terms || [],
+    predefined_products: app.predefinedProducts || [],
+    logo_height: app.logoHeight || 45,
+    service_role_key: app.serviceRoleKey || ''
+  };
+};
+
 // Retrieve Settings
-export function getSettings() {
+export async function getSettings() {
+  const supabase = getSupabase();
+  if (supabase) {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data, error } = await supabase
+          .from('settings')
+          .select('*')
+          .eq('id', '00000000-0000-0000-0000-000000000000')
+          .maybeSingle();
+        if (!error && data) {
+          const appSettings = mapDbSettingsToApp(data);
+          cachedSettings = appSettings;
+          localStorage.setItem('meaven_settings', JSON.stringify(appSettings));
+          return appSettings;
+        }
+      }
+    } catch (e) {
+      console.error('Failed to load settings from Supabase, using local fallback', e);
+    }
+  }
+
+  // Local Storage fallback
   try {
     const saved = localStorage.getItem('meaven_settings');
     if (!saved) {
       localStorage.setItem('meaven_settings', JSON.stringify(DEFAULT_SETTINGS));
+      cachedSettings = DEFAULT_SETTINGS;
       return DEFAULT_SETTINGS;
     }
     let parsed = JSON.parse(saved);
     const storedVersion = parsed?._version || 0;
     if (storedVersion < SETTINGS_VERSION) {
       parsed = { ...DEFAULT_SETTINGS, ...parsed, _version: SETTINGS_VERSION };
-      // Override notes and terms to new clean defaults
       parsed.notes = [...DEFAULT_SETTINGS.notes];
       parsed.terms = [...DEFAULT_SETTINGS.terms];
-      // Force update Supabase credentials on version upgrade to 5
       parsed.supabaseUrl = DEFAULT_SETTINGS.supabaseUrl;
       parsed.supabaseAnonKey = DEFAULT_SETTINGS.supabaseAnonKey;
       localStorage.setItem('meaven_settings', JSON.stringify(parsed));
     }
-    // Filter out any "attached images" references permanently
     if (parsed.notes) {
       parsed.notes = parsed.notes.filter(note => !note.toLowerCase().includes('attached') && !note.toLowerCase().includes('image'));
     }
     if (parsed.terms) {
       parsed.terms = parsed.terms.filter(term => !term.toLowerCase().includes('attached') && !term.toLowerCase().includes('image'));
     }
-    // Ensure all default fields exist (for backward compatibility if settings schema changes)
-    return { ...DEFAULT_SETTINGS, ...parsed };
+    const appSettings = { ...DEFAULT_SETTINGS, ...parsed };
+    cachedSettings = appSettings;
+    return appSettings;
   } catch (e) {
     console.error('Failed to read settings from localStorage', e);
+    cachedSettings = DEFAULT_SETTINGS;
     return DEFAULT_SETTINGS;
   }
 }
 
 // Save Settings
-export function saveSettings(settings) {
+export async function saveSettings(settings) {
+  cachedSettings = settings;
   try {
     localStorage.setItem('meaven_settings', JSON.stringify(settings));
   } catch (e) {
     console.error('Failed to save settings to localStorage', e);
   }
+
+  const supabase = getSupabase();
+  if (supabase) {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const dbPayload = mapAppSettingsToDb(settings);
+        const { error } = await supabase
+          .from('settings')
+          .upsert(dbPayload);
+        if (error) throw error;
+      }
+    } catch (e) {
+      console.error('Failed to save settings to Supabase', e);
+    }
+  }
+  return true;
 }
 
 // Get Supabase client
@@ -138,7 +248,7 @@ let supabaseInstance = null;
 let lastSupabaseConfig = { url: '', key: '' };
 
 export function getSupabase() {
-  const settings = getSettings();
+  const settings = getCachedSettingsSync();
   const url = settings.supabaseUrl?.trim();
   const key = settings.supabaseAnonKey?.trim();
 

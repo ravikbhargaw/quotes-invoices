@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Plus, Search, Edit3, Trash2, Mail, Phone, MapPin, Building, CreditCard, ArrowLeft } from 'lucide-react';
 
-export default function Clients({ clients, onSaveClient, onDeleteClient }) {
+export default function Clients({ clients, onSaveClient, onDeleteClient, isAdmin }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [editingClient, setEditingClient] = useState(null); // client object or null
   const [isEditing, setIsEditing] = useState(false);
@@ -208,13 +208,15 @@ export default function Clients({ clients, onSaveClient, onDeleteClient }) {
                   >
                     <Edit3 size={11} />
                   </button>
-                  <button 
-                    onClick={() => onDeleteClient(c.id)}
-                    className="p-1 hover:bg-zinc-200 text-rose-500 rounded"
-                    title="Delete Contact"
-                  >
-                    <Trash2 size={11} />
-                  </button>
+                  {isAdmin && (
+                    <button 
+                      onClick={() => onDeleteClient(c.id)}
+                      className="p-1 hover:bg-zinc-200 text-rose-500 rounded"
+                      title="Delete Contact"
+                    >
+                      <Trash2 size={11} />
+                    </button>
+                  )}
                 </div>
               </div>
 

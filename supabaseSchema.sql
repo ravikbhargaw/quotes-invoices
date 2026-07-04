@@ -56,3 +56,31 @@ $$ language 'plpgsql';
 -- Create triggers to update updated_at
 CREATE TRIGGER update_clients_updated_at BEFORE UPDATE ON public.clients FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_quotes_updated_at BEFORE UPDATE ON public.quotes FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Create Settings Table
+CREATE TABLE IF NOT EXISTS public.settings (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    gemini_api_key TEXT,
+    openai_api_key TEXT,
+    anthropic_api_key TEXT,
+    xai_api_key TEXT,
+    selected_model TEXT DEFAULT 'gemini-2.5-flash',
+    company_logo TEXT, -- Base64 logo
+    bank_details JSONB,
+    payment_schedule JSONB,
+    timeline_steps JSONB,
+    notes JSONB,
+    terms JSONB,
+    predefined_products JSONB,
+    logo_height INTEGER DEFAULT 45,
+    service_role_key TEXT,
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Insert initial default settings row if not present
+INSERT INTO public.settings (id, selected_model) 
+VALUES ('00000000-0000-0000-0000-000000000000', 'gemini-2.5-flash')
+ON CONFLICT (id) DO NOTHING;
+
+CREATE TRIGGER update_settings_updated_at BEFORE UPDATE ON public.settings FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

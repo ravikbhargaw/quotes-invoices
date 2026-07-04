@@ -2,17 +2,19 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Sparkles, FileText, History, Users, Settings as SettingsIcon, 
   Plus, Printer, Save, Database, Trash2, Copy, Trash, ArrowRight,
-  TrendingUp, Clock, CheckCircle, ChevronUp, ChevronDown
+  TrendingUp, Clock, CheckCircle, ChevronUp, ChevronDown, LogOut
 } from 'lucide-react';
 import { 
   getQuotes, saveQuote, deleteQuote, 
   getClients, saveClient, deleteClient, 
-  getSettings, saveSettings, getSupabase 
+  getSettings, saveSettings, getSupabase,
+  getCachedSettingsSync
 } from './utils/db';
 import DocumentPreview from './components/DocumentPreview';
 import Clients from './components/Clients';
 import Settings from './components/Settings';
 import Dashboard from './components/Dashboard';
+import Login from './components/Login';
 
 const GEMINI_SYSTEM_PROMPT = `You are a structured quote parser for meaven.in, a premium commercial glass and aluminium solutions company based in Bangalore.
 
@@ -68,8 +70,77 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('form'); // 'ai', 'form', 'history', 'clients', 'settings'
   const [quotes, setQuotes] = useState([]);
   const [clients, setClients] = useState([]);
-  const [settings, setSettings] = useState(getSettings());
+  const [settings, setSettings] = useState(getCachedSettingsSync());
   const [dbConnected, setDbConnected] = useState(false);
+  const [session, setSession] = useState(null);
+  const [loadingSession, setLoadingSession] = useState(true);
+
+  // Password reset state
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [updatingPassword, setUpdatingPassword] = useState(false);
+  const [resetError, setResetError] = useState('');
+
+  useEffect(() => {
+    const supabase = getSupabase();
+    if (supabase) {
+      // Check current session
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        setSession(session);
+        setLoadingSession(false);
+      });
+
+      // Listen to auth changes
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        setSession(session);
+      });
+
+      return () => subscription.unsubscribe();
+    } else {
+      setLoadingSession(false);
+    }
+  }, [settings]);
+
+  const handleForcePasswordReset = async (e) => {
+    e.preventDefault();
+    if (newPassword.length < 6) {
+      setResetError('Password must be at least 6 characters.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setResetError('Passwords do not match.');
+      return;
+    }
+
+    setUpdatingPassword(true);
+    setResetError('');
+
+    try {
+      const supabase = getSupabase();
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+        data: { force_password_reset: false }
+      });
+      if (error) throw error;
+      alert('Password updated successfully! Welcome to the portal.');
+      
+      // Refresh session
+      const { data: { session: updatedSession } } = await supabase.auth.getSession();
+      setSession(updatedSession);
+    } catch (err) {
+      console.error(err);
+      setResetError(err.message || 'Failed to update password.');
+    } finally {
+      setUpdatingPassword(false);
+    }
+  };
+
+  const user = session?.user;
+  const userMetadata = user?.user_metadata || {};
+  const userRole = userMetadata.role || 'user';
+  const userEmail = user?.email?.toLowerCase() || '';
+  const isAdmin = !dbConnected || userEmail === 'ravi.bhargaw@meaven.in' || userRole === 'admin';
+  const forcePasswordReset = userMetadata.force_password_reset === true;
 
   // Active Quote State
   const [activeQuote, setActiveQuote] = useState({
@@ -120,7 +191,7 @@ export default function App() {
 
   // Load Initial Data
   const loadData = async () => {
-    const loadedSettings = getSettings();
+    const loadedSettings = await getSettings();
     setSettings(loadedSettings);
     
     const supabase = getSupabase();
@@ -854,6 +925,148 @@ Quote:
     }, 2000);
   };
 
+  // 1. Loading active Auth session
+  if (dbConnected && loadingSession) {
+    return (
+      <div style={{
+        width: '100vw',
+        height: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg, #1B2B45 0%, #0F172A 100%)',
+        fontFamily: 'Inter, sans-serif',
+        color: '#FFFFFF'
+      }}>
+        <div style={{
+          fontSize: '24px',
+          fontWeight: '800',
+          color: '#C9A96E',
+          fontFamily: 'Plus Jakarta Sans, sans-serif',
+          letterSpacing: '-0.02em',
+          marginBottom: '16px'
+        }}>
+          meaven
+        </div>
+        <div style={{
+          width: '24px',
+          height: '24px',
+          border: '3px solid rgba(255,255,255,0.1)',
+          borderTopColor: '#C9A96E',
+          borderRadius: '50%',
+          animation: 'spin 1s linear infinite'
+        }} />
+        <style>{`
+          @keyframes spin {
+            to { transform: rotate(360deg); }
+          }
+        `}</style>
+      </div>
+    );
+  }
+
+  // 2. Check if DB is connected and user is not authenticated
+  if (dbConnected && !session) {
+    return <Login onLoginSuccess={(s) => setSession(s)} />;
+  }
+
+  // 3. Forced Password Reset Flow
+  if (session && forcePasswordReset) {
+    return (
+      <div style={{
+        width: '100vw',
+        height: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg, #1B2B45 0%, #0F172A 100%)',
+        fontFamily: 'Inter, sans-serif',
+        padding: '20px',
+        boxSizing: 'border-box'
+      }}>
+        <div style={{
+          width: '100%',
+          maxWidth: '420px',
+          background: '#FFFFFF',
+          borderRadius: '0px',
+          boxShadow: '0 20px 50px rgba(0, 0, 0, 0.3)',
+          borderTop: '5px solid #C9A96E',
+          padding: '40px 32px',
+          textAlign: 'center',
+          boxSizing: 'border-box'
+        }}>
+          <h2 style={{ fontSize: '20px', fontWeight: '700', color: '#1B2B45', margin: '0 0 10px 0', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+            Set Permanent Password
+          </h2>
+          <p style={{ fontSize: '13px', color: '#666', marginBottom: '24px' }}>
+            For security reasons, you must change your temporary password on your first login.
+          </p>
+
+          {resetError && (
+            <div style={{ background: '#FDF2F2', border: '1px solid #FDE8E8', color: '#E02424', padding: '10px', fontSize: '12px', borderRadius: '4px', marginBottom: '20px', textAlign: 'left' }}>
+              {resetError}
+            </div>
+          )}
+
+          <form onSubmit={handleForcePasswordReset} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ textAlign: 'left' }}>
+              <label style={{ display: 'block', fontSize: '9px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.08em', color: '#1B2B45', marginBottom: '6px' }}>
+                New Password
+              </label>
+              <input
+                type="password"
+                placeholder="Minimum 6 characters"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                required
+                style={{ width: '100%', padding: '11px 12px', boxSizing: 'border-box', border: '1px solid #E5E7EB', borderRadius: '4px', fontSize: '13px' }}
+              />
+            </div>
+
+            <div style={{ textAlign: 'left' }}>
+              <label style={{ display: 'block', fontSize: '9px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.08em', color: '#1B2B45', marginBottom: '6px' }}>
+                Confirm New Password
+              </label>
+              <input
+                type="password"
+                placeholder="Confirm password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                style={{ width: '100%', padding: '11px 12px', boxSizing: 'border-box', border: '1px solid #E5E7EB', borderRadius: '4px', fontSize: '13px' }}
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={updatingPassword}
+              style={{
+                width: '100%',
+                padding: '12px',
+                background: '#1B2B45',
+                color: '#FFFFFF',
+                border: 'none',
+                borderRadius: '4px',
+                fontSize: '13px',
+                fontWeight: '700',
+                cursor: updatingPassword ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+                marginTop: '10px'
+              }}
+            >
+              {updatingPassword ? 'Updating...' : 'Update Password'}
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="app-container">
       
@@ -902,13 +1115,15 @@ Quote:
           <Users size={20} />
         </div>
 
-        <div 
-          onClick={() => setActiveTab('settings')}
-          className={`nav-item ${activeTab === 'settings' ? 'active' : ''}`}
-          data-tooltip="Settings"
-        >
-          <SettingsIcon size={20} />
-        </div>
+        {isAdmin && (
+          <div 
+            onClick={() => setActiveTab('settings')}
+            className={`nav-item ${activeTab === 'settings' ? 'active' : ''}`}
+            data-tooltip="Settings"
+          >
+            <SettingsIcon size={20} />
+          </div>
+        )}
 
         {/* DB Sync Indicator bottom */}
         <div className="mt-auto flex flex-col items-center gap-2">
@@ -920,6 +1135,21 @@ Quote:
           ) : (
             <div className="p-2 bg-zinc-100 text-zinc-400 rounded-lg border border-zinc-200" title="Local Storage Mode">
               <Database size={16} />
+            </div>
+          )}
+          {session && (
+            <div 
+              onClick={async () => {
+                const supabase = getSupabase();
+                if (supabase) {
+                  await supabase.auth.signOut();
+                  setSession(null);
+                }
+              }}
+              className="nav-item cursor-pointer text-zinc-400 hover:text-red-500 mt-2"
+              data-tooltip="Log Out"
+            >
+              <LogOut size={20} />
             </div>
           )}
         </div>
@@ -1854,6 +2084,7 @@ Quote:
                 onToggleStatus={handleToggleQuoteStatus}
                 onViewSettings={() => setActiveTab('settings')}
                 onViewClients={() => setActiveTab('clients')}
+                isAdmin={isAdmin}
               />
             </div>
           </div>
@@ -1873,6 +2104,7 @@ Quote:
                 onSaveClient={handleSaveClientCRM}
                 onDeleteClient={handleDeleteClientCRM}
                 onBack={() => setActiveTab('form')}
+                isAdmin={isAdmin}
               />
             </div>
           </div>
@@ -1891,6 +2123,7 @@ Quote:
                 settings={settings}
                 onSaveSettings={handleSaveSettingsConfig}
                 onBack={() => setActiveTab('form')}
+                currentUserEmail={userEmail}
               />
             </div>
           </div>

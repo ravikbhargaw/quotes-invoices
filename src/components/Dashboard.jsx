@@ -10,7 +10,8 @@ export default function Dashboard({
   onDuplicateQuote, 
   onDeleteQuote, 
   onCreateNewQuote,
-  onToggleStatus
+  onToggleStatus,
+  isAdmin
 }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
@@ -207,13 +208,15 @@ export default function Dashboard({
                   >
                     <Copy size={10} /> Dup
                   </button>
-                  <button 
-                    onClick={() => onDeleteQuote(q.id)}
-                    className="p-1 text-rose-500 hover:bg-rose-50 rounded"
-                    title="Delete Quote"
-                  >
-                    <Trash2 size={12} />
-                  </button>
+                  {isAdmin && (
+                    <button 
+                      onClick={() => onDeleteQuote(q.id)}
+                      className="p-1 text-rose-500 hover:bg-rose-50 rounded"
+                      title="Delete Quote"
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  )}
                 </div>
               </div>
             </div>

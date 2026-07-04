@@ -5,18 +5,108 @@ import {
 } from 'lucide-react';
 import { testSupabaseConnection, syncLocalDataToCloud } from '../utils/db';
 
-export default function Settings({ settings, onSaveSettings }) {
+export default function Settings({ settings, onSaveSettings, currentUserEmail }) {
   const [activeTab, setActiveTab] = useState('supabase'); // 'supabase', 'gemini', 'products', 'defaults'
   const [localSettings, setLocalSettings] = useState({ ...settings });
+
+  // Team Management states
+  const [teamUsers, setTeamUsers] = useState([]);
+  const [newUserEmail, setNewUserEmail] = useState('');
+  const [newUserPassword, setNewUserPassword] = useState('');
+  const [newUserRole, setNewUserRole] = useState('user');
+  const [creatingUser, setCreatingUser] = useState(false);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [teamError, setTeamError] = useState('');
+  const [teamSuccess, setTeamSuccess] = useState('');
 
   useEffect(() => {
     setLocalSettings({ ...settings });
   }, [settings]);
-  
+
   // Connection states
   const [testingConnection, setTestingConnection] = useState(false);
-  const [connStatus, setConnStatus] = useState(null); // { success: bool, message: str }
-  const [syncStatus, setSyncStatus] = useState(null); // { success: bool, message: str }
+  const [connStatus, setConnStatus] = useState(null);
+  const [syncStatus, setSyncStatus] = useState(null);
+
+  useEffect(() => {
+    if (activeTab === 'team' && localSettings.supabaseUrl && localSettings.serviceRoleKey) {
+      fetchTeamUsers();
+    }
+  }, [activeTab]);
+
+  const fetchTeamUsers = async () => {
+    setLoadingUsers(true);
+    setTeamError('');
+    try {
+      const { createClient } = await import('@supabase/supabase-js');
+      const adminClient = createClient(localSettings.supabaseUrl, localSettings.serviceRoleKey, {
+        auth: { persistSession: false }
+      });
+      const { data: { users }, error } = await adminClient.auth.admin.listUsers();
+      if (error) throw error;
+      setTeamUsers(users || []);
+    } catch (e) {
+      console.error(e);
+      setTeamError('Failed to fetch team directory. Make sure your Service Role Key is correct.');
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
+  const handleCreateUser = async (e) => {
+    e.preventDefault();
+    if (!newUserEmail.trim() || !newUserPassword.trim()) {
+      setTeamError('Please fill in both email and password.');
+      return;
+    }
+    setCreatingUser(true);
+    setTeamError('');
+    setTeamSuccess('');
+    try {
+      const { createClient } = await import('@supabase/supabase-js');
+      const adminClient = createClient(localSettings.supabaseUrl, localSettings.serviceRoleKey, {
+        auth: { persistSession: false }
+      });
+      const { data, error } = await adminClient.auth.admin.createUser({
+        email: newUserEmail.trim(),
+        password: newUserPassword.trim(),
+        email_confirm: true,
+        user_metadata: {
+          role: newUserRole,
+          force_password_reset: true
+        }
+      });
+      if (error) throw error;
+      setTeamSuccess(`Account for ${newUserEmail} created successfully!`);
+      setNewUserEmail('');
+      setNewUserPassword('');
+      fetchTeamUsers();
+    } catch (e) {
+      console.error(e);
+      setTeamError(e.message || 'Failed to create user account.');
+    } finally {
+      setCreatingUser(false);
+    }
+  };
+
+  const handleDeleteUser = async (userId, userEmail) => {
+    if (!confirm(`Are you sure you want to delete ${userEmail}'s access?`)) return;
+    setTeamError('');
+    setTeamSuccess('');
+    try {
+      const { createClient } = await import('@supabase/supabase-js');
+      const adminClient = createClient(localSettings.supabaseUrl, localSettings.serviceRoleKey, {
+        auth: { persistSession: false }
+      });
+      const { error } = await adminClient.auth.admin.deleteUser(userId);
+      if (error) throw error;
+      setTeamSuccess(`Account deleted successfully.`);
+      fetchTeamUsers();
+    } catch (e) {
+      console.error(e);
+      setTeamError(e.message || 'Failed to delete user account.');
+    }
+  };
 
   const handleSave = (newSettings = localSettings) => {
     onSaveSettings(newSettings);
@@ -134,7 +224,8 @@ export default function Settings({ settings, onSaveSettings }) {
           { key: 'defaults', label: 'Defaults' },
           { key: 'gemini', label: 'AI Key' },
           { key: 'supabase', label: 'DB Cloud' },
-          { key: 'products', label: 'Catalog' }
+          { key: 'products', label: 'Catalog' },
+          ...(currentUserEmail === 'ravi.bhargaw@meaven.in' ? [{ key: 'team', label: 'Team Directory' }] : [])
         ].map((tab) => (
           <button
             key={tab.key}
@@ -192,6 +283,22 @@ export default function Settings({ settings, onSaveSettings }) {
                 className="input-field font-mono text-xs"
               />
             </div>
+
+            {currentUserEmail === 'ravi.bhargaw@meaven.in' && (
+               <div className="form-group">
+                 <label className="input-label">Service Role Key (Secret Admin Key)</label>
+                 <input 
+                   type="password" 
+                   value={localSettings.serviceRoleKey || ''} 
+                   onChange={(e) => handleInputChange('serviceRoleKey', e.target.value)}
+                   placeholder="Paste Supabase service_role key here..."
+                   className="input-field font-mono text-xs"
+                 />
+                 <span style={{ fontSize: '9px', color: 'var(--ui-text-muted)', display: 'block', marginTop: '4px' }}>
+                   Used to manage team directory accounts. Never shared with other users.
+                 </span>
+               </div>
+             )}
 
             {/* Test Connection Result */}
             {connStatus && (
@@ -542,6 +649,130 @@ export default function Settings({ settings, onSaveSettings }) {
             >
               Save Defaults
             </button>
+          </div>
+        )}
+
+        {activeTab === 'team' && currentUserEmail === 'ravi.bhargaw@meaven.in' && (
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-xs font-bold text-zinc-800 uppercase tracking-wide">Team Directory Management</h3>
+              <p className="text-[10px] text-[var(--ui-text-muted)] mt-0.5">Manage portal credentials and access privileges for your team.</p>
+            </div>
+
+            {teamError && (
+              <div className="p-2.5 rounded bg-rose-50 border border-rose-100 text-rose-700 text-xs">
+                {teamError}
+              </div>
+            )}
+
+            {teamSuccess && (
+              <div className="p-2.5 rounded bg-emerald-50 border border-emerald-100 text-emerald-700 text-xs">
+                {teamSuccess}
+              </div>
+            )}
+
+            {/* Create User Form */}
+            <form onSubmit={handleCreateUser} className="p-3 bg-zinc-50 border border-zinc-200 rounded-lg space-y-3">
+              <h4 className="text-[10.5px] font-bold text-zinc-700 uppercase">Create New Team Account</h4>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="form-group">
+                  <label className="input-label text-[10px]">Email Address</label>
+                  <input 
+                    type="email" 
+                    value={newUserEmail} 
+                    onChange={(e) => setNewUserEmail(e.target.value)} 
+                    placeholder="name@meaven.in" 
+                    required 
+                    className="input-field text-xs py-1.5"
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="input-label text-[10px]">Temporary Password</label>
+                  <input 
+                    type="text" 
+                    value={newUserPassword} 
+                    onChange={(e) => setNewUserPassword(e.target.value)} 
+                    placeholder="Min 6 characters" 
+                    required 
+                    className="input-field text-xs py-1.5"
+                  />
+                </div>
+              </div>
+              <div className="flex items-center justify-between gap-2 pt-1">
+                <div className="flex items-center gap-3">
+                  <label className="flex items-center gap-1.5 text-xs text-zinc-600 font-semibold cursor-pointer">
+                    <input 
+                      type="radio" 
+                      name="role" 
+                      value="user" 
+                      checked={newUserRole === 'user'} 
+                      onChange={() => setNewUserRole('user')} 
+                      className="cursor-pointer"
+                    />
+                    Standard User
+                  </label>
+                  <label className="flex items-center gap-1.5 text-xs text-zinc-600 font-semibold cursor-pointer">
+                    <input 
+                      type="radio" 
+                      name="role" 
+                      value="admin" 
+                      checked={newUserRole === 'admin'} 
+                      onChange={() => setNewUserRole('admin')} 
+                      className="cursor-pointer"
+                    />
+                    Admin
+                  </label>
+                </div>
+                <button 
+                  type="submit" 
+                  disabled={creatingUser} 
+                  className="btn text-xs px-4 py-1.5"
+                >
+                  {creatingUser ? 'Registering...' : 'Create Account'}
+                </button>
+              </div>
+            </form>
+
+            {/* Users List */}
+            <div className="space-y-2">
+              <h4 className="text-[10.5px] font-bold text-zinc-700 uppercase">Active Accounts</h4>
+              {loadingUsers ? (
+                <p className="text-xs text-zinc-400">Loading directory list...</p>
+              ) : teamUsers.length === 0 ? (
+                <p className="text-xs text-zinc-400">No other team accounts found.</p>
+              ) : (
+                <div className="border border-zinc-200 divide-y divide-zinc-200 rounded-lg overflow-hidden bg-white">
+                  {teamUsers.map((tu) => (
+                    <div key={tu.id} className="p-3 flex items-center justify-between text-xs hover:bg-zinc-50">
+                      <div>
+                        <strong className="text-zinc-800">{tu.email}</strong>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <span className={`text-[9px] px-1.5 py-0.2 rounded font-bold uppercase ${
+                            tu.user_metadata?.role === 'admin' ? 'bg-indigo-50 border border-indigo-100 text-indigo-700' : 'bg-zinc-100 border border-zinc-200 text-zinc-600'
+                          }`}>
+                            {tu.user_metadata?.role || 'user'}
+                          </span>
+                          {tu.user_metadata?.force_password_reset && (
+                            <span className="text-[9px] bg-amber-50 border border-amber-100 text-amber-700 px-1 py-0.2 rounded font-medium">
+                              Pending Reset
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      {tu.email?.toLowerCase() !== 'ravi.bhargaw@meaven.in' && (
+                        <button 
+                          onClick={() => handleDeleteUser(tu.id, tu.email)}
+                          className="p-1 hover:bg-rose-50 text-rose-500 rounded"
+                          title="Revoke Access"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
 
