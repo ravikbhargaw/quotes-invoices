@@ -176,6 +176,9 @@ export default function App() {
   const [aiPrompt, setAiPrompt] = useState('');
   const [loadingAI, setLoadingAI] = useState(false);
   const [parsedAIResult, setParsedAIResult] = useState(null);
+  const [showNewQuoteModal, setShowNewQuoteModal] = useState(false);
+  const [showFormAiPrompt, setShowFormAiPrompt] = useState(false);
+  const [loadingFormAI, setLoadingFormAI] = useState(false);
   const [showPrintTip, setShowPrintTip] = useState(false);
   const [isPrinting, setIsPrinting] = useState(false);
 
@@ -995,8 +998,16 @@ Quote:
     alert('AI simulated data calculated and staged successfully!');
   };
 
-  // Reset to new quote template
+  // Reset to new quote template — triggers mode selection wizard
   const handleResetQuote = () => {
+    if (isDirty) {
+      const confirmReset = window.confirm("You have unsaved changes in your active quote. If you start a new quote, you will lose your unsaved edits. Are you sure you want to proceed?");
+      if (!confirmReset) return;
+    }
+    setShowNewQuoteModal(true);
+  };
+
+  const handleStartManualQuote = () => {
     setActiveQuote({
       quote_number: 'MEA-' + new Date().getFullYear() + '-' + String(Math.floor(1000 + Math.random() * 9000)),
       client_name: '',
@@ -1017,7 +1028,276 @@ Quote:
       total: 0
     });
     setIsDirty(false);
+    setShowFormAiPrompt(false);
+    setShowNewQuoteModal(false);
     setActiveTab('form');
+  };
+
+  const handleStartAIQuote = () => {
+    setActiveQuote({
+      quote_number: 'MEA-' + new Date().getFullYear() + '-' + String(Math.floor(1000 + Math.random() * 9000)),
+      client_name: '',
+      gstin: '',
+      date: new Date().toISOString().split('T')[0],
+      validity: '15 Days',
+      reference: '',
+      status: 'Draft',
+      format: 'proposal',
+      items: [],
+      payment_schedule: [...settings.paymentSchedule],
+      timeline_steps: [...settings.timelineSteps],
+      notes: [...settings.notes],
+      terms: [...settings.terms],
+      adjustment: 0,
+      subtotal: 0,
+      tax: 0,
+      total: 0
+    });
+    setAiPrompt('');
+    setIsDirty(false);
+    setShowFormAiPrompt(true);
+    setShowNewQuoteModal(false);
+    setActiveTab('form');
+  };
+
+  const handleGenerateAIForForm = async () => {
+    if (!aiPrompt.trim()) return;
+    setLoadingFormAI(true);
+    
+    const selectedModel = settings.selectedModel || 'gemini-2.5-flash';
+    const systemPrompt = GEMINI_SYSTEM_PROMPT;
+    let parsed = null;
+
+    try {
+      if (selectedModel.startsWith('gemini')) {
+        const key = settings.geminiApiKey?.trim();
+        if (!key) throw new Error("No Gemini API Key found. Please add it in Settings.");
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${key}`;
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{
+              parts: [
+                { text: systemPrompt },
+                { text: "Parse this request: " + aiPrompt }
+              ]
+            }],
+            generationConfig: { responseMimeType: "application/json" }
+          })
+        });
+
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(errData.error?.message || `HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const jsonText = data.candidates[0].content.parts[0].text;
+        parsed = cleanAndParseJSON(jsonText);
+      } 
+      else if (selectedModel.startsWith('gpt')) {
+        const key = settings.openaiApiKey?.trim();
+        if (!key) throw new Error("No OpenAI API Key found. Please add it in Settings.");
+        const url = 'https://api.openai.com/v1/chat/completions';
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${key}`
+          },
+          body: JSON.stringify({
+            model: selectedModel,
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: "Parse this request: " + aiPrompt }
+            ],
+            response_format: { type: "json_object" }
+          })
+        });
+
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(errData.error?.message || `HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const jsonText = data.choices[0].message.content;
+        parsed = cleanAndParseJSON(jsonText);
+      }
+      else if (selectedModel.startsWith('claude')) {
+        const key = settings.anthropicApiKey?.trim();
+        if (!key) throw new Error("No Anthropic API Key found. Please add it in Settings.");
+        const url = 'https://api.anthropic.com/v1/messages';
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+            'x-api-key': key,
+            'anthropic-version': '2023-06-01',
+            'anthropic-dangerous-direct-browser-access': 'true'
+          },
+          body: JSON.stringify({
+            model: selectedModel,
+            max_tokens: 4000,
+            system: systemPrompt,
+            messages: [
+              { role: 'user', content: "Parse this request: " + aiPrompt }
+            ]
+          })
+        });
+
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(errData.error?.message || `HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const jsonText = data.content[0].text;
+        parsed = cleanAndParseJSON(jsonText);
+      }
+      else if (selectedModel.startsWith('grok')) {
+        const key = settings.xaiApiKey?.trim();
+        if (!key) throw new Error("No xAI (Grok) API Key found. Please add it in Settings.");
+        const url = 'https://api.xai.ai/v1/chat/completions';
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${key}`
+          },
+          body: JSON.stringify({
+            model: selectedModel,
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: "Parse this request: " + aiPrompt }
+            ],
+            response_format: { type: "json_object" }
+          })
+        });
+
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(errData.error?.message || `HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const jsonText = data.choices[0].message.content;
+        parsed = cleanAndParseJSON(jsonText);
+      }
+
+      if (parsed) {
+        const computedQuote = {
+          quote_number: parsed.quote_number || parsed.quoteNumber || activeQuote.quote_number || 'MEA-' + new Date().getFullYear() + '-' + String(Math.floor(1000 + Math.random() * 9000)),
+          client_name: parsed.client_name || parsed.clientName || '',
+          gstin: parsed.gstin || '',
+          date: parsed.date ? getIsoDate(parsed.date) : new Date().toISOString().split('T')[0],
+          validity: parsed.validity || '15 Days',
+          reference: parsed.reference || parsed.subject || '',
+          status: 'Draft',
+          format: parsed.format || 'proposal',
+          desc: parsed.desc || '',
+          items: (parsed.items || []).map(item => ({
+            name: item.name || '',
+            desc: item.desc || item.description || '',
+            qty: parseFloat(item.qty) || 1,
+            unit: item.unit || 'sqft',
+            rate: parseFloat(item.rate) || 0,
+            discount: parseFloat(item.discount) || 0,
+            specs: item.specs || item.tags || [],
+            sizes: item.sizes || [],
+            client_spec: item.client_spec || '',
+            proposed_spec: item.proposed_spec || item.our_offer || '',
+            upgrade_summary: item.upgrade_summary || ''
+          })),
+          payment_schedule: (parsed.payment_schedule && parsed.payment_schedule.length > 0) ? parsed.payment_schedule : (parsed.paymentSchedule && parsed.paymentSchedule.length > 0) ? parsed.paymentSchedule : [...settings.paymentSchedule],
+          timeline_steps: (parsed.timeline_steps && parsed.timeline_steps.length > 0) ? parsed.timeline_steps : (parsed.timelineSteps && parsed.timelineSteps.length > 0) ? parsed.timelineSteps : [...settings.timelineSteps],
+          notes: parsed.notes || [...settings.notes],
+          terms: parsed.terms || [...settings.terms],
+          adjustment: parseFloat(parsed.adjustment) || 0
+        };
+
+        // Auto-generate summaries via AI
+        const key = settings.geminiApiKey?.trim() || settings.openaiApiKey?.trim();
+        if (key) {
+          try {
+            const itemsList = computedQuote.items.map(item => `- ${item.name}: ${item.qty} ${item.unit} (${item.specs?.join(', ') || ''})`).join('\n');
+            const summaryPrompt = `Generate a professional executive summary (2-4 sentences) for meaven.in. Scope of work items:\n${itemsList}\nDo not mention any prices.`;
+            const summarySystemPrompt = "You are a professional copywriter for meaven.in (premium glass and aluminium execution). Write a concise summary focusing on structural execution certainty and precise architectural alignment. Return ONLY the paragraph.";
+            
+            const summaryPromise = generateTextWithAI(summaryPrompt, summarySystemPrompt)
+              .then(res => { computedQuote.desc = res; })
+              .catch(e => console.error('Failed to auto-generate summary', e));
+
+            const upgradePromises = computedQuote.items.map((item, idx) => {
+              const clientSpec = item.client_spec?.trim();
+              const proposedSpec = (item.proposed_spec || item.our_offer || '')?.trim();
+              if (clientSpec && proposedSpec && !item.upgrade_summary) {
+                const upPrompt = `Briefly summarize the practical difference (1 short sentence) between these specifications for a glass/aluminium item:\nClient Specified: ${clientSpec}\nMeaven Proposed: ${proposedSpec}`;
+                const upSystem = "You are a structural glass engineer for meaven.in. Return ONLY one short sentence (max 12 words) explaining the practical benefit of Meaven's proposed spec. Example: 'Upgraded to Saint-Gobain toughened glass for superior load resistance.'";
+                return generateTextWithAI(upPrompt, upSystem)
+                  .then(res => { item.upgrade_summary = res; })
+                  .catch(e => console.error('Failed to auto-generate upgrade summary for item ' + idx, e));
+              }
+              return Promise.resolve();
+            });
+
+            await Promise.all([summaryPromise, ...upgradePromises]);
+          } catch (e) {
+            console.error('Failed auto-generating summaries', e);
+          }
+        }
+
+        setActiveQuote(computedQuote);
+        setIsDirty(true);
+        setShowFormAiPrompt(false);
+        alert('AI Quote parsed and loaded successfully!');
+      } else {
+        throw new Error("Empty response received from AI model.");
+      }
+
+    } catch (err) {
+      console.error(err);
+      alert(`AI Live API failed (${selectedModel}): ${err.message}. Falling back to simulation mode.`);
+      
+      // Simulator mode fallback
+      const simulatorOutput = {
+        client_name: 'Simulated Client Ltd',
+        date: new Date().toISOString().split('T')[0],
+        validity: '15 Days',
+        quote_number: 'MEA-' + new Date().getFullYear() + '-' + String(Math.floor(1000 + Math.random() * 9000)),
+        reference: 'Standard Structural Glazing Works',
+        status: 'Draft',
+        format: 'proposal',
+        desc: 'Meaven is pleased to submit this proposal for premium glass and aluminium works. Our design ensures maximum safety and durability.',
+        items: [
+          {
+            name: 'Meaven Minimalist Partition',
+            desc: 'Frameless glass partition installation',
+            qty: 120,
+            unit: 'sqft',
+            rate: 650,
+            discount: 0,
+            specs: ['10mm Toughened', 'Saint-Gobain Glass', 'Dorma Patch Fittings'],
+            sizes: ['1200 × 2400 mm'],
+            client_spec: '10mm Ordinary Glass',
+            proposed_spec: '10mm Toughened Saint-Gobain Glass',
+            upgrade_summary: 'Upgraded to Saint-Gobain toughened glass for superior structural safety.'
+          }
+        ],
+        payment_schedule: [...settings.paymentSchedule],
+        timeline_steps: [...settings.timelineSteps],
+        notes: [...settings.notes],
+        terms: [...settings.terms],
+        adjustment: 0
+      };
+      
+      setActiveQuote(simulatorOutput);
+      setIsDirty(true);
+      setShowFormAiPrompt(false);
+    } finally {
+      setLoadingFormAI(false);
+    }
   };
 
   // Save current quote draft
@@ -1513,23 +1793,185 @@ Quote:
                 <h2><span>Quote</span> Form</h2>
                 <p>Edit quote items and values manually.</p>
               </div>
-              <div className="flex gap-2">
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                 <button
                   onClick={handleResetQuote}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-750 rounded-lg text-xs font-semibold border border-zinc-200 transition-colors shadow-sm"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '8px 14px',
+                    backgroundColor: '#FAF9F6',
+                    color: '#3C4A6B',
+                    borderRadius: '8px',
+                    fontSize: '12px',
+                    fontWeight: '600',
+                    border: '1px solid #E6E3DA',
+                    transition: 'all 0.2s ease',
+                    cursor: 'pointer',
+                    boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#EFEDE6'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#FAF9F6'; }}
                 >
-                  <Plus size={12} /> New Quote
+                  <Plus size={13} /> New Quote
                 </button>
                 <button
                   onClick={handleSaveQuoteDraft}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--ui-accent)] hover:bg-[var(--ui-accent-hover)] text-white rounded-lg text-xs font-semibold shadow-md transition-colors"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '8px 14px',
+                    backgroundColor: 'var(--ui-accent, #4F46E5)',
+                    color: '#FFFFFF',
+                    borderRadius: '8px',
+                    fontSize: '12px',
+                    fontWeight: '600',
+                    border: 'none',
+                    transition: 'all 0.2s ease',
+                    cursor: 'pointer',
+                    boxShadow: '0 2px 4px rgba(79,70,229,0.2)'
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--ui-accent-hover, #4338CA)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'var(--ui-accent, #4F46E5)'; }}
                 >
-                  <Save size={12} /> Save Draft
+                  <Save size={13} /> Save Draft
                 </button>
               </div>
             </div>
             
             <div className="panel-body space-y-4 sub-panel-content">
+              {showFormAiPrompt && (
+                <div className="bg-zinc-50 border border-zinc-200 p-4 rounded-xl space-y-4 text-left">
+                  <div className="flex justify-between items-center mb-1">
+                    <h3 className="text-xs font-bold text-zinc-700 uppercase tracking-wider flex items-center gap-1.5" style={{ margin: 0 }}>
+                      <Sparkles size={14} className="text-[var(--ui-accent, #4F46E5)] animate-pulse" /> AI Quote Creator
+                    </h3>
+                    <button 
+                      type="button"
+                      onClick={() => setShowFormAiPrompt(false)}
+                      className="text-[10px] text-zinc-400 hover:text-zinc-650 font-bold uppercase tracking-wider cursor-pointer"
+                      style={{ background: 'none', border: 'none' }}
+                    >
+                      Skip / Manual
+                    </button>
+                  </div>
+                  
+                  {/* Model Selector */}
+                  <div className="form-group">
+                    <label className="input-label" style={{ fontSize: '11px', fontWeight: '600', color: 'var(--ui-text-muted)' }}>AI Engine Model</label>
+                    <select
+                      value={settings.selectedModel || 'gemini-2.5-flash'}
+                      onChange={(e) => {
+                        const updated = { ...settings, selectedModel: e.target.value };
+                        saveSettings(updated);
+                        setSettings(updated);
+                      }}
+                      className="input-field cursor-pointer"
+                      style={{ padding: '6px 10px', fontSize: '12px' }}
+                    >
+                      <optgroup label="Google Gemini">
+                        <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                        <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+                        <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                        <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                      </optgroup>
+                      <optgroup label="OpenAI">
+                        <option value="gpt-4o">GPT-4o (OpenAI)</option>
+                        <option value="gpt-4o-mini">GPT-4o Mini (OpenAI)</option>
+                      </optgroup>
+                      <optgroup label="Anthropic Claude">
+                        <option value="claude-3-5-sonnet-latest">Claude 3.5 Sonnet</option>
+                        <option value="claude-haiku-4-5">Claude 4.5 Haiku</option>
+                      </optgroup>
+                      <optgroup label="xAI Grok">
+                        <option value="grok-2-1212">Grok 2</option>
+                        <option value="grok-beta">Grok Beta</option>
+                        <option value="grok-4.1-fast">Grok 4.1 Fast</option>
+                        <option value="grok-4.3">Grok 4.3</option>
+                      </optgroup>
+                    </select>
+                  </div>
+
+                  {/* BOQ Prompt Area */}
+                  <div className="form-group">
+                    <label className="input-label" style={{ fontSize: '11px', fontWeight: '600', color: 'var(--ui-text-muted)' }}>Describe Project / Paste BOQ Text</label>
+                    <textarea
+                      value={aiPrompt}
+                      onChange={(e) => setAiPrompt(e.target.value)}
+                      rows="7"
+                      placeholder="Describe the items, dimensions, rates, client details, payment terms, or paste raw specifications/emails here..."
+                      className="input-field font-sans resize-none text-xs"
+                      style={{ padding: '8px 10px', width: '100%', border: '1px solid var(--border)' }}
+                    />
+                  </div>
+
+                  {/* Preset helpers */}
+                  <div className="space-y-1.5">
+                    <span className="text-[9px] uppercase font-bold text-zinc-400 block tracking-wider">Example Presets</span>
+                    <div className="flex flex-wrap gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => handleLoadPresetPrompt(1)}
+                        className="px-2 py-1 bg-white hover:bg-zinc-100 border border-zinc-200 rounded text-[10px] text-zinc-650 transition-colors cursor-pointer"
+                      >
+                        Minimalist Partition
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleLoadPresetPrompt(2)}
+                        className="px-2 py-1 bg-white hover:bg-zinc-100 border border-zinc-200 rounded text-[10px] text-zinc-650 transition-colors cursor-pointer"
+                      >
+                        Shower Enclosures
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleLoadPresetPrompt(3)}
+                        className="px-2 py-1 bg-white hover:bg-zinc-100 border border-zinc-200 rounded text-[10px] text-zinc-650 transition-colors cursor-pointer"
+                      >
+                        Frameless Doors
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleLoadPresetPrompt(4)}
+                        className="px-2 py-1 bg-white hover:bg-zinc-100 border border-zinc-200 rounded text-[10px] text-zinc-650 transition-colors cursor-pointer"
+                      >
+                        Glass Pergola
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex gap-2 pt-2">
+                    <button
+                      type="button"
+                      onClick={handleGenerateAIForForm}
+                      disabled={loadingFormAI}
+                      className="flex-1 py-2 text-white text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 shadow-md"
+                      style={{
+                        backgroundColor: 'var(--ui-accent, #4F46E5)',
+                        border: 'none',
+                        cursor: loadingFormAI ? 'not-allowed' : 'pointer',
+                        opacity: loadingFormAI ? 0.7 : 1
+                      }}
+                    >
+                      <Sparkles size={13} />
+                      {loadingFormAI ? 'AI is processing BOQ...' : 'Generate Form Data'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowFormAiPrompt(false)}
+                      className="px-4 py-2 border border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-650 text-xs font-bold rounded-lg transition-colors cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {!showFormAiPrompt && (
+                <>
 
               {/* Client Dropdown selector */}
               <div className="form-group">
@@ -1598,8 +2040,7 @@ Quote:
                     type="button"
                     onClick={handleGenerateSummary}
                     disabled={generatingSummary}
-                    className="text-[10px] text-[var(--ui-accent)] hover:underline font-semibold flex items-center gap-1"
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                    className="px-2.5 py-0.5 rounded-full text-[10px] bg-indigo-50 border border-indigo-100 text-[var(--ui-accent, #4F46E5)] hover:bg-indigo-100 transition-colors font-bold flex items-center gap-1 cursor-pointer"
                   >
                     {generatingSummary ? 'Generating...' : '✨ AI Generate'}
                   </button>
@@ -1677,12 +2118,12 @@ Quote:
                   <button
                     type="button"
                     onClick={() => handleAddItem()}
-                    className="text-xs font-semibold text-[var(--ui-accent)] hover:underline"
+                    className="px-2.5 py-1 rounded bg-indigo-50 border border-indigo-100 text-xs font-semibold text-[var(--ui-accent, #4F46E5)] hover:bg-indigo-100 transition-colors cursor-pointer"
                   >
                     + Add Custom Item
                   </button>
                 </div>
-
+ 
                 {/* Predefined select catalog shortcut */}
                 <div className="bg-[var(--ui-card)] border border-[var(--ui-border)] p-2.5 rounded-lg mb-3 flex gap-2 items-center">
                   <select
@@ -1701,7 +2142,12 @@ Quote:
                       const product = settings.predefinedProducts[idx];
                       if (product) handleAddItem(product);
                     }}
-                    className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-semibold rounded shrink-0 transition-colors"
+                    className="px-3 py-1.5 text-white text-xs font-semibold rounded shrink-0 transition-colors cursor-pointer flex items-center justify-center"
+                    style={{
+                      height: '32px',
+                      backgroundColor: 'var(--ui-accent, #4F46E5)',
+                      border: 'none'
+                    }}
                   >
                     + Add
                   </button>
@@ -2232,9 +2678,11 @@ Quote:
                   }}
                 />
               </div>
-            </div>
-          </div>
-        )}
+            </>
+          )}
+        </div>
+      </div>
+    )}
 
         {/* PANEL: HISTORY / DASHBOARD */}
         {activeTab === 'history' && (
@@ -2347,6 +2795,56 @@ Quote:
           </div>
         )}
       </div>
+
+      {/* 4. NEW QUOTE WIZARD DIALOG OVERLAY */}
+      {showNewQuoteModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl border border-zinc-200 shadow-2xl p-6 max-w-md w-full text-center animate-scale-up text-left" style={{ fontFamily: 'Inter, sans-serif' }}>
+            <h3 className="text-lg font-extrabold text-zinc-900 font-outfit mb-2 text-center" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontWeight: '800' }}>Create New Quote</h3>
+            <p className="text-xs text-zinc-500 mb-6 text-center">Choose how you want to build this project proposal.</p>
+            
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              {/* Option 1: AI Assistant */}
+              <div 
+                onClick={() => {
+                  handleStartAIQuote();
+                }}
+                className="border-2 border-dashed border-zinc-200 hover:border-[var(--ui-accent, #4F46E5)] rounded-xl p-4 cursor-pointer transition-all hover:bg-zinc-50 flex flex-col items-center group text-center"
+              >
+                <div className="h-10 w-10 rounded-lg bg-indigo-50 text-[var(--ui-accent, #4F46E5)] flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                  <Sparkles size={20} />
+                </div>
+                <span className="text-xs font-bold text-zinc-800 block mb-1">Use AI Assistant</span>
+                <span className="text-[10px] text-zinc-400 leading-tight">Paste a note or BOQ text to parse automatically</span>
+              </div>
+              
+              {/* Option 2: Build Yourself */}
+              <div 
+                onClick={() => {
+                  handleStartManualQuote();
+                }}
+                className="border-2 border-dashed border-zinc-200 hover:border-zinc-500 rounded-xl p-4 cursor-pointer transition-all hover:bg-zinc-50 flex flex-col items-center group text-center"
+              >
+                <div className="h-10 w-10 rounded-lg bg-zinc-100 text-zinc-650 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                  <FileText size={20} />
+                </div>
+                <span className="text-xs font-bold text-zinc-800 block mb-1">Build Yourself</span>
+                <span className="text-[10px] text-zinc-400 leading-tight">Type out the client, items and rates manually</span>
+              </div>
+            </div>
+            
+            <div className="text-center">
+              <button 
+                onClick={() => setShowNewQuoteModal(false)}
+                className="text-[11px] text-zinc-400 hover:text-zinc-600 font-bold uppercase tracking-wider transition-colors cursor-pointer"
+                style={{ background: 'none', border: 'none' }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* PrintTip overlay JSX */}
       {showPrintTip && (
