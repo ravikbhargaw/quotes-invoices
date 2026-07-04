@@ -1,14 +1,13 @@
 import React, { useState, useMemo } from 'react';
-import { Plus, Search, Edit3, Trash2, Mail, Phone, MapPin, Building, CreditCard, ArrowLeft } from 'lucide-react';
+import { Plus, Search, Edit3, Trash2, Mail, Phone, MapPin, Building, CreditCard, ArrowLeft, Users } from 'lucide-react';
 
 export default function Clients({ clients, onSaveClient, onDeleteClient, isAdmin }) {
   const [searchTerm, setSearchTerm] = useState('');
-  const [editingClient, setEditingClient] = useState(null); // client object or null
+  const [editingClient, setEditingClient] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
 
-  // Filter clients
   const filteredClients = useMemo(() => {
-    return clients.filter(c => 
+    return clients.filter(c =>
       c.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       c.company?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       c.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -45,211 +44,382 @@ export default function Clients({ clients, onSaveClient, onDeleteClient, isAdmin
     setEditingClient(prev => ({ ...prev, [field]: value }));
   };
 
+  /* ── Add / Edit Form ─────────────────────────────────────── */
   if (isEditing && editingClient) {
     return (
-      <div 
-        className="space-y-4 animate-fade-in no-print text-left"
-        style={{ padding: '16px 14px', overflowY: 'auto', height: 'calc(100vh - 80px)' }}
+      <div
+        className="animate-fade-in no-print"
+        style={{ padding: '0', overflowY: 'auto', height: 'calc(100vh - 68px)' }}
       >
-        <div className="flex items-center gap-2 border-b border-[var(--ui-border)] pb-3 mb-2">
-          <button 
+        {/* Form header bar */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+          padding: '14px 18px',
+          borderBottom: '1px solid #ECEAE4',
+          background: '#FFFFFF',
+          flexShrink: 0,
+        }}>
+          <button
             onClick={handleCloseForm}
-            className="p-1 hover:bg-zinc-200 text-zinc-600 rounded"
+            style={{
+              width: '28px', height: '28px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: '#F4F3EF', border: '1px solid #E2DFD8',
+              borderRadius: '8px', cursor: 'pointer', color: '#6B7280',
+              flexShrink: 0,
+            }}
           >
-            <ArrowLeft size={14} />
+            <ArrowLeft size={13} />
           </button>
-          <span className="text-xs font-bold uppercase tracking-wider text-zinc-700">
-            {editingClient.id ? 'Edit Client Record' : 'Add New Client'}
-          </span>
+          <div>
+            <div style={{ fontSize: '11.5px', fontWeight: 700, color: '#12213F', letterSpacing: '0.04em', textTransform: 'uppercase', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+              {editingClient.id ? 'Edit Client Record' : 'Add New Contact'}
+            </div>
+            <div style={{ fontSize: '10px', color: '#9CA3AF', marginTop: '1px' }}>
+              {editingClient.id ? 'Update contact details below' : 'Fill in the details to save a new client'}
+            </div>
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-white border border-[var(--ui-border)] p-4 rounded-xl space-y-3.5 shadow-sm">
-          <div className="form-group">
-            <label className="input-label">Client Name *</label>
-            <input 
-              type="text"
-              value={editingClient.name}
-              onChange={(e) => handleInputChange('name', e.target.value)}
-              placeholder="e.g. Mr. Chandru"
-              className="input-field"
-              required
-            />
-          </div>
+        {/* Form body */}
+        <div style={{ padding: '16px 16px 32px', background: '#F7F6F2', minHeight: 0 }}>
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
 
-          <div className="form-group">
-            <label className="input-label">Company Name</label>
-            <input 
-              type="text"
-              value={editingClient.company}
-              onChange={(e) => handleInputChange('company', e.target.value)}
-              placeholder="e.g. Acme Designs"
-              className="input-field"
-            />
-          </div>
+            {[
+              { label: 'Client Name *', field: 'name', type: 'text', placeholder: 'e.g. Mr. Chandru', required: true },
+              { label: 'Company Name', field: 'company', type: 'text', placeholder: 'e.g. Acme Designs' },
+              { label: 'GSTIN', field: 'gstin', type: 'text', placeholder: 'e.g. 29AAMCM4939R2ZA', mono: true, upper: true },
+              { label: 'Email Address', field: 'email', type: 'email', placeholder: 'e.g. client@company.com' },
+              { label: 'Phone Number', field: 'phone', type: 'text', placeholder: 'e.g. +91 99000 12345' },
+            ].map(({ label, field, type, placeholder, required, mono, upper }) => (
+              <div key={field}>
+                <div style={{ fontSize: '9.5px', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '5px' }}>
+                  {label}
+                </div>
+                <input
+                  type={type}
+                  value={editingClient[field]}
+                  onChange={(e) => handleInputChange(field, e.target.value)}
+                  placeholder={placeholder}
+                  required={required}
+                  className="input-field"
+                  style={{
+                    fontFamily: mono ? 'monospace' : 'inherit',
+                    textTransform: upper ? 'uppercase' : 'none',
+                    background: '#FFFFFF',
+                    border: '1px solid #E2DFD8',
+                    borderRadius: '10px',
+                    padding: '9px 12px',
+                    fontSize: '12px',
+                    color: '#12213F',
+                    width: '100%',
+                    outline: 'none',
+                  }}
+                />
+              </div>
+            ))}
 
-          <div className="form-group">
-            <label className="input-label">GSTIN</label>
-            <input 
-              type="text"
-              value={editingClient.gstin}
-              onChange={(e) => handleInputChange('gstin', e.target.value)}
-              placeholder="e.g. 29AAMCM4939R2ZA"
-              className="input-field font-mono uppercase"
-            />
-          </div>
+            {/* Address */}
+            <div>
+              <div style={{ fontSize: '9.5px', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '5px' }}>
+                Billing Address
+              </div>
+              <textarea
+                rows={3}
+                value={editingClient.address}
+                onChange={(e) => handleInputChange('address', e.target.value)}
+                placeholder="Billing address details..."
+                className="input-field"
+                style={{
+                  background: '#FFFFFF',
+                  border: '1px solid #E2DFD8',
+                  borderRadius: '10px',
+                  padding: '9px 12px',
+                  fontSize: '12px',
+                  color: '#12213F',
+                  width: '100%',
+                  resize: 'none',
+                  outline: 'none',
+                  fontFamily: 'inherit',
+                }}
+              />
+            </div>
 
-          <div className="form-group">
-            <label className="input-label">Email Address</label>
-            <input 
-              type="email"
-              value={editingClient.email}
-              onChange={(e) => handleInputChange('email', e.target.value)}
-              placeholder="e.g. client@company.com"
-              className="input-field"
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="input-label">Phone Number</label>
-            <input 
-              type="text"
-              value={editingClient.phone}
-              onChange={(e) => handleInputChange('phone', e.target.value)}
-              placeholder="e.g. +91 99000 12345"
-              className="input-field"
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="input-label">Billing Address</label>
-            <textarea 
-              rows="3"
-              value={editingClient.address}
-              onChange={(e) => handleInputChange('address', e.target.value)}
-              placeholder="Billing address details..."
-              className="input-field font-sans resize-none h-20"
-            />
-          </div>
-
-          <div className="pt-2 flex gap-2">
-            <button 
-              type="submit" 
-              className="btn flex-1 py-2 text-xs"
-            >
-              Save Client
-            </button>
-            <button 
-              type="button" 
-              onClick={handleCloseForm}
-              className="btn-outline px-4 py-2 text-xs"
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
+            {/* Actions */}
+            <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+              <button type="submit" className="btn" style={{ flex: 1, fontSize: '11.5px', padding: '9px 0', borderRadius: '10px' }}>
+                {editingClient.id ? 'Update Contact' : 'Save Contact'}
+              </button>
+              <button
+                type="button"
+                onClick={handleCloseForm}
+                style={{
+                  padding: '9px 16px',
+                  fontSize: '11.5px',
+                  fontWeight: 600,
+                  border: '1px solid #E2DFD8',
+                  borderRadius: '10px',
+                  background: '#FFFFFF',
+                  color: '#6B7280',
+                  cursor: 'pointer',
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     );
   }
 
+  /* ── List View ────────────────────────────────────────────── */
   return (
-    <div 
-      className="space-y-4 animate-fade-in no-print text-left"
-      style={{ padding: '16px 14px', overflowY: 'auto', height: 'calc(100vh - 80px)' }}
+    <div
+      className="animate-fade-in no-print"
+      style={{ overflowY: 'auto', height: 'calc(100vh - 68px)', display: 'flex', flexDirection: 'column' }}
     >
-      
-      {/* Search & Actions Bar */}
-      <div className="bg-white border border-[var(--ui-border)] p-4 rounded-xl space-y-3 shadow-sm">
-        <div className="relative">
-          <Search className="absolute left-2.5 top-2.5 text-[var(--ui-text-muted)]" size={14} />
-          <input 
+      {/* Search + Add bar — white card pinned at top */}
+      <div style={{
+        padding: '14px 14px 12px',
+        background: '#FFFFFF',
+        borderBottom: '1px solid #ECEAE4',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '10px',
+        flexShrink: 0,
+      }}>
+        {/* Search field */}
+        <div style={{ position: 'relative' }}>
+          <Search
+            size={13}
+            style={{ position: 'absolute', left: '11px', top: '50%', transform: 'translateY(-50%)', color: '#9CA3AF', pointerEvents: 'none' }}
+          />
+          <input
             type="text"
-            placeholder="Search by name, company, GSTIN..."
+            placeholder="Search by name, company, GSTIN…"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="input-field pl-8 text-xs" style={{ padding: '6px 8px 6px 28px' }}
+            style={{
+              width: '100%',
+              background: '#F7F6F2',
+              border: '1px solid #E2DFD8',
+              borderRadius: '10px',
+              padding: '8px 12px 8px 32px',
+              fontSize: '12px',
+              color: '#12213F',
+              outline: 'none',
+              fontFamily: 'inherit',
+            }}
           />
         </div>
-        
-        <button 
+
+        {/* Add contact button */}
+        <button
           onClick={handleOpenAdd}
-          className="btn text-xs py-2 w-full"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '7px',
+            background: 'linear-gradient(135deg, #B98A2E 0%, #8A6417 100%)',
+            color: '#FFFFFF',
+            border: 'none',
+            borderRadius: '10px',
+            padding: '9px 0',
+            fontSize: '11.5px',
+            fontWeight: 700,
+            cursor: 'pointer',
+            width: '100%',
+            fontFamily: 'Inter, sans-serif',
+            letterSpacing: '0.02em',
+            boxShadow: '0 3px 10px rgba(185,138,46,0.3)',
+          }}
         >
-          <Plus size={14} /> Add New Contact
+          <Plus size={14} strokeWidth={2.5} />
+          Add New Contact
         </button>
       </div>
 
-      {/* Clients Cards List */}
-      {filteredClients.length === 0 ? (
-        <div className="border border-[var(--ui-border)] border-dashed rounded-lg p-6 text-center text-xs">
-          <h4 className="font-semibold text-zinc-700">No Contacts Found</h4>
-          <p className="text-[10px] text-[var(--ui-text-muted)] mt-1">
-            Add repeat clients for rapid, auto-filled quotes.
-          </p>
-        </div>
-      ) : (
-        <div className="history-list">
-          {filteredClients.map((c) => (
-            <div key={c.id} className="quote-card">
-              <div className="flex justify-between items-start mb-2">
-                <div>
-                  <h3 className="text-xs font-bold text-zinc-800">{c.name}</h3>
-                  {c.company && (
-                    <span className="text-[10px] text-[var(--ui-text-muted)] font-medium block">
-                      {c.company}
-                    </span>
-                  )}
-                </div>
-                <div className="flex gap-1">
-                  <button 
-                    onClick={() => handleOpenEdit(c)}
-                    className="p-1 hover:bg-zinc-200 text-zinc-500 rounded"
-                    title="Edit Contact"
-                  >
-                    <Edit3 size={11} />
-                  </button>
-                  {isAdmin && (
-                    <button 
-                      onClick={() => onDeleteClient(c.id)}
-                      className="p-1 hover:bg-zinc-200 text-rose-500 rounded"
-                      title="Delete Contact"
-                    >
-                      <Trash2 size={11} />
-                    </button>
-                  )}
-                </div>
-              </div>
+      {/* List body */}
+      <div style={{ flex: 1, padding: '14px 14px 32px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
 
-              <div className="space-y-1 text-[10px] text-[var(--ui-text-muted)] border-t border-[var(--ui-border)] pt-2 mt-1">
-                {c.gstin && (
-                  <div className="flex items-center gap-1.5 font-mono text-[9px]">
-                    <CreditCard size={10} className="shrink-0" />
-                    <span>GST: {c.gstin}</span>
-                  </div>
-                )}
-                {c.email && (
-                  <div className="flex items-center gap-1.5">
-                    <Mail size={10} className="shrink-0" />
-                    <span className="truncate">{c.email}</span>
-                  </div>
-                )}
-                {c.phone && (
-                  <div className="flex items-center gap-1.5">
-                    <Phone size={10} className="shrink-0" />
-                    <span>{c.phone}</span>
-                  </div>
-                )}
-                {c.address && (
-                  <div className="flex items-start gap-1.5 mt-0.5">
-                    <MapPin size={10} className="shrink-0 mt-0.5" />
-                    <span className="line-clamp-1" title={c.address}>{c.address}</span>
-                  </div>
-                )}
-              </div>
+        {/* Count label */}
+        {filteredClients.length > 0 && (
+          <div style={{ fontSize: '9.5px', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.08em', paddingLeft: '2px' }}>
+            {filteredClients.length} Contact{filteredClients.length !== 1 ? 's' : ''}
+          </div>
+        )}
+
+        {filteredClients.length === 0 ? (
+          /* ── Premium empty state ── */
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+            padding: '40px 24px',
+            background: '#FFFFFF',
+            border: '1.5px dashed #E2DFD8',
+            borderRadius: '16px',
+            marginTop: '8px',
+          }}>
+            <div style={{
+              width: '44px', height: '44px',
+              background: '#FBF6EA',
+              border: '1px solid #E9D6A6',
+              borderRadius: '12px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              marginBottom: '14px',
+            }}>
+              <Users size={20} color="#B98A2E" strokeWidth={1.5} />
             </div>
-          ))}
+            <div style={{ fontSize: '13px', fontWeight: 700, color: '#12213F', marginBottom: '6px', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+              No Contacts Yet
+            </div>
+            <div style={{ fontSize: '11px', color: '#9CA3AF', lineHeight: 1.6, maxWidth: '200px' }}>
+              Add repeat clients for rapid, auto-filled quotes — no retyping needed.
+            </div>
+            <button
+              onClick={handleOpenAdd}
+              style={{
+                marginTop: '18px',
+                display: 'flex', alignItems: 'center', gap: '6px',
+                background: 'transparent',
+                border: '1px solid #E9D6A6',
+                borderRadius: '8px',
+                padding: '7px 16px',
+                fontSize: '11px',
+                fontWeight: 700,
+                color: '#8A6417',
+                cursor: 'pointer',
+                fontFamily: 'Inter, sans-serif',
+              }}
+            >
+              <Plus size={12} strokeWidth={2.5} /> Add First Contact
+            </button>
+          </div>
+        ) : (
+          filteredClients.map((c) => (
+            <ClientCard
+              key={c.id}
+              c={c}
+              isAdmin={isAdmin}
+              onEdit={() => handleOpenEdit(c)}
+              onDelete={() => onDeleteClient(c.id)}
+            />
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ── Isolated Client Card ─────────────────────────────────────────────────── */
+function ClientCard({ c, isAdmin, onEdit, onDelete }) {
+  const [editHover, setEditHover]   = useState(false);
+  const [deleteHover, setDeleteHover] = useState(false);
+
+  return (
+    <div style={{
+      background: '#FFFFFF',
+      border: '1px solid #EAE5D8',
+      borderRadius: '14px',
+      padding: '14px 16px',
+      boxShadow: '0 1px 3px rgba(18,33,63,0.04), 0 4px 12px rgba(18,33,63,0.03)',
+      transition: 'box-shadow 0.18s ease, border-color 0.18s ease',
+      textAlign: 'left',
+    }}>
+      {/* Header row */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: c.gstin || c.email || c.phone || c.address ? '10px' : '0' }}>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#12213F', fontFamily: 'Plus Jakarta Sans, sans-serif', lineHeight: 1.2, marginBottom: c.company ? '3px' : 0 }}>
+            {c.name}
+          </div>
+          {c.company && (
+            <div style={{ fontSize: '10.5px', color: '#767F9C', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <Building size={10} strokeWidth={1.5} />
+              {c.company}
+            </div>
+          )}
+        </div>
+
+        {/* Action buttons */}
+        <div style={{ display: 'flex', gap: '6px', flexShrink: 0, marginLeft: '8px' }}>
+          <button
+            onClick={onEdit}
+            onMouseEnter={() => setEditHover(true)}
+            onMouseLeave={() => setEditHover(false)}
+            title="Edit Contact"
+            style={{
+              width: '28px', height: '28px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: editHover ? '#F4F3EF' : 'transparent',
+              border: `1px solid ${editHover ? '#E2DFD8' : 'transparent'}`,
+              borderRadius: '8px',
+              cursor: 'pointer',
+              color: editHover ? '#8A6417' : '#9CA3AF',
+              transition: 'all 0.15s ease',
+            }}
+          >
+            <Edit3 size={12} strokeWidth={2} stroke="currentColor" />
+          </button>
+
+          {isAdmin && (
+            <button
+              onClick={onDelete}
+              onMouseEnter={() => setDeleteHover(true)}
+              onMouseLeave={() => setDeleteHover(false)}
+              title="Delete Contact"
+              style={{
+                width: '28px', height: '28px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: deleteHover ? '#FBF1EE' : 'transparent',
+                border: `1px solid ${deleteHover ? '#F4D0CA' : 'transparent'}`,
+                borderRadius: '8px',
+                cursor: 'pointer',
+                color: deleteHover ? '#B4483A' : '#9CA3AF',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              <Trash2 size={12} strokeWidth={2} stroke="currentColor" />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Details row */}
+      {(c.gstin || c.email || c.phone || c.address) && (
+        <div style={{ borderTop: '1px solid #F0EDE6', paddingTop: '10px', display: 'flex', flexDirection: 'column', gap: '5px' }}>
+          {c.gstin && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '7px', fontSize: '10px', color: '#767F9C' }}>
+              <CreditCard size={10} strokeWidth={1.5} style={{ flexShrink: 0, color: '#B98A2E' }} />
+              <span style={{ fontFamily: 'monospace', letterSpacing: '0.05em', fontSize: '9.5px' }}>GST: {c.gstin}</span>
+            </div>
+          )}
+          {c.email && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '7px', fontSize: '10px', color: '#767F9C' }}>
+              <Mail size={10} strokeWidth={1.5} style={{ flexShrink: 0 }} />
+              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.email}</span>
+            </div>
+          )}
+          {c.phone && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '7px', fontSize: '10px', color: '#767F9C' }}>
+              <Phone size={10} strokeWidth={1.5} style={{ flexShrink: 0 }} />
+              <span>{c.phone}</span>
+            </div>
+          )}
+          {c.address && (
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '7px', fontSize: '10px', color: '#767F9C' }}>
+              <MapPin size={10} strokeWidth={1.5} style={{ flexShrink: 0, marginTop: '1px' }} />
+              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={c.address}>{c.address}</span>
+            </div>
+          )}
         </div>
       )}
-
     </div>
   );
 }

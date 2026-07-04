@@ -2799,7 +2799,8 @@ Quote:
               <p>Select contacts to pre-fill billing headers.</p>
             </div>
             
-            <div className="panel-body overflow-y-auto">
+            {/* No panel-body wrapper — Clients manages its own scroll layout */}
+            <div style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
               <Clients 
                 clients={clients}
                 onSaveClient={handleSaveClientCRM}

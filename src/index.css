@@ -81,30 +81,32 @@ body {
 }
 
 .sidebar-nav {
-  width: 65px;
-  background: var(--ui-nav);
-  border-right: 1px solid var(--ui-border);
+  width: 68px;
+  background: #FAFAF8;
+  border-right: 1px solid #ECEAE4;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 24px 0;
-  gap: 20px;
+  padding: 20px 0 16px;
+  gap: 8px;
   height: 100vh;
   max-height: 100vh;
   overflow: hidden;
   box-sizing: border-box;
+  box-shadow: 2px 0 8px rgba(18,33,63,0.03);
 }
 
 .sidebar-panel {
-  width: 395px;
-  background: var(--ui-sidebar);
-  border-right: 1px solid var(--ui-border);
+  width: 390px;
+  background: #F7F6F2;
+  border-right: 1px solid #ECEAE4;
   display: flex;
   flex-direction: column;
   height: 100vh;
   max-height: 100vh;
   overflow: hidden;
   box-sizing: border-box;
+  box-shadow: 2px 0 12px rgba(18,33,63,0.04);
 }
 
 .preview-pane {
@@ -122,49 +124,51 @@ body {
 
 /* ── NAV BUTTONS ── */
 .nav-item {
-  width: 42px;
-  height: 42px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #FAF9F6;
-  border: 1px solid #E6E3DA;
-  color: #3C4A6B;
-  border-radius: 8px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: #9CA3AF;
+  border-radius: 10px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.18s ease;
   position: relative;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
 }
 
 .nav-item:hover {
   color: #12213F;
   background: #EFEDE6;
-  border-color: #D7D4CB;
+  border-color: #E2DFD8;
 }
 
 .nav-item.active {
   color: #FFFFFF !important;
-  background: var(--ui-accent, #B8933E) !important;
-  border: none !important;
-  box-shadow: 0 3px 8px rgba(184, 147, 62, 0.4) !important;
+  background: linear-gradient(135deg, #B98A2E 0%, #8A6417 100%) !important;
+  border-color: transparent !important;
+  box-shadow: 0 4px 12px rgba(185,138,46,0.35) !important;
 }
 
 /* Tooltip */
 .nav-item::after {
   content: attr(data-tooltip);
   position: absolute;
-  left: 55px;
-  background: var(--ui-text);
+  left: calc(100% + 10px);
+  background: #12213F;
   color: #FFFFFF;
-  padding: 4px 8px;
+  padding: 5px 10px;
   font-size: 10px;
-  border-radius: 4px;
+  font-weight: 600;
+  border-radius: 6px;
   white-space: nowrap;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.2s;
-  z-index: 100;
+  transition: opacity 0.15s;
+  z-index: 200;
+  letter-spacing: 0.02em;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
 .nav-item:hover::after {
@@ -173,18 +177,19 @@ body {
 
 /* ── SIDEBAR PANEL CONTENTS ── */
 .panel-header {
-  padding: 20px;
-  border-bottom: 1px solid var(--ui-border);
-  background: var(--ui-sidebar);
+  padding: 18px 20px 16px;
+  border-bottom: 1px solid #ECEAE4;
+  background: #FFFFFF;
+  flex-shrink: 0;
 }
 
 .panel-header h2 {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--ui-text);
-  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  color: #12213F;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
 }
 
 .panel-header h2 span {
@@ -192,17 +197,19 @@ body {
 }
 
 .panel-header p {
-  font-size: 11px;
-  color: var(--ui-text-muted);
-  margin-top: 3px;
+  font-size: 10.5px;
+  color: #9CA3AF;
+  margin-top: 4px;
+  line-height: 1.5;
+  font-weight: 400;
 }
 
 .panel-body {
   flex: 1;
-  overflow-y: auto !important;
-  min-height: 0 !important;
-  padding: 20px;
-  background-color: var(--ui-bg) !important;
+  overflow-y: auto;
+  min-height: 0;
+  padding: 16px 14px 24px;
+  background: #F7F6F2;
 }
 
 /* ── FORM ELEMENTS ── */
@@ -948,29 +955,30 @@ body {
 }
 
 .history-list {
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 14px !important;
-  padding-bottom: 20px !important;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-bottom: 32px;
 }
 
+/* .quote-card is now only used for Clients cards — quote log uses QuoteCard component */
 .quote-card {
-  background: #FFFFFF !important;
-  border: 1px solid var(--ui-border) !important;
-  border-radius: 12px !important;
-  padding: 14px !important;
-  transition: all 0.2s ease-in-out !important;
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 10px !important;
-  text-align: left !important;
-  cursor: default !important;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.02), 0 1px 2px rgba(0,0,0,0.01) !important;
+  background: #FFFFFF;
+  border: 1px solid #E8E4DB;
+  border-radius: 14px;
+  padding: 14px 16px;
+  transition: box-shadow 0.18s ease, border-color 0.18s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  text-align: left;
+  cursor: default;
+  box-shadow: 0 1px 3px rgba(18,33,63,0.04), 0 4px 12px rgba(18,33,63,0.03);
 }
 
 .quote-card:hover {
-  border-color: var(--ui-accent) !important;
-  box-shadow: 0 4px 14px rgba(184, 151, 90, 0.08), 0 2px 4px rgba(0,0,0,0.02) !important;
+  border-color: #D4C8AE;
+  box-shadow: 0 2px 8px rgba(185,138,46,0.08), 0 6px 20px rgba(18,33,63,0.06);
 }
 
 /* Scroll container for Left active sub-panels */
