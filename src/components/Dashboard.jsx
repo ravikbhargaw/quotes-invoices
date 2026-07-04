@@ -41,14 +41,11 @@ export default function Dashboard({
       return matchesSearch && matchesStatus;
     });
 
-    // Sort descending by date, fallback to ID
+    // Sort descending by updated_at / created_at timestamp to ensure the newest is always on top
     return filtered.sort((a, b) => {
-      const dateA = Date.parse(a.date);
-      const dateB = Date.parse(b.date);
-      if (isNaN(dateA) || isNaN(dateB)) {
-        return (b.id || 0) - (a.id || 0); // fallback by ID order
-      }
-      return dateB - dateA;
+      const timeA = new Date(a.updated_at || a.created_at || a.date || 0).getTime();
+      const timeB = new Date(b.updated_at || b.created_at || b.date || 0).getTime();
+      return timeB - timeA;
     });
   }, [quotes, searchTerm, statusFilter]);
 

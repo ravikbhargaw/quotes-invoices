@@ -15,6 +15,31 @@ import Clients from './components/Clients';
 import Settings from './components/Settings';
 import Dashboard from './components/Dashboard';
 import Login from './components/Login';
+const getNextSeqQuoteNumber = (quotesList) => {
+  const prefix = 'MEA';
+  const currentYear = new Date().getFullYear();
+  const yearStr = String(currentYear);
+  
+  // Filter quotes that match the current year and the prefix (e.g., MEA-2026-XXXX)
+  const regex = new RegExp(`^${prefix}-${yearStr}-(\\d{4})$`);
+  let maxSeq = 0;
+  
+  if (Array.isArray(quotesList)) {
+    for (const q of quotesList) {
+      const qNum = q.quote_number || q.estimate_no || '';
+      const match = qNum.match(regex);
+      if (match) {
+        const seq = parseInt(match[1], 10);
+        if (seq > maxSeq) {
+          maxSeq = seq;
+        }
+      }
+    }
+  }
+  
+  const nextSeq = maxSeq + 1;
+  return `${prefix}-${yearStr}-${String(nextSeq).padStart(4, '0')}`;
+};
 
 const GEMINI_SYSTEM_PROMPT = `You are a structured quote parser for meaven.in, a premium commercial glass and aluminium solutions company based in Bangalore.
 
@@ -153,7 +178,7 @@ export default function App() {
 
   // Active Quote State
   const [activeQuote, setActiveQuote] = useState({
-    quote_number: 'MEA-' + new Date().getFullYear() + '-' + String(Math.floor(1000 + Math.random() * 9000)),
+    quote_number: 'MEA-' + new Date().getFullYear() + '-0001',
     client_name: '',
     gstin: '',
     date: new Date().toISOString().split('T')[0],
@@ -232,10 +257,11 @@ export default function App() {
   };
 
   const handleDuplicateQuote = async (quoteToDup) => {
+    const nextNum = getNextSeqQuoteNumber(quotes);
     const dup = {
       ...quoteToDup,
       id: undefined,
-      quote_number: quoteToDup.quote_number + '-DUP',
+      quote_number: nextNum,
       date: new Date().toISOString().split('T')[0]
     };
     await saveQuote(dup);
@@ -807,7 +833,7 @@ Quote:
 
     const computedQuote = {
       ...parsed,
-      quote_number: parsed.quote_number || parsed.estimate_no || 'MEA-' + new Date().getFullYear() + '-' + String(Math.floor(1000 + Math.random() * 9000)),
+      quote_number: parsed.quote_number || parsed.estimate_no || getNextSeqQuoteNumber(quotes),
       date: parsed.date ? (isNaN(new Date(parsed.date).getTime()) ? new Date().toISOString().split('T')[0] : new Date(parsed.date).toISOString().split('T')[0]) : new Date().toISOString().split('T')[0],
       validity: parsed.validity || '15 Days',
       adjustment: flatAdjustment,
@@ -985,7 +1011,7 @@ Quote:
       data = {
         client_name: 'Acme Glass Corp',
         gstin: '—',
-        quote_number: 'MEA-' + Math.floor(1000 + Math.random() * 9000),
+        quote_number: getNextSeqQuoteNumber(quotes),
         date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }),
         validity: '15 Days',
         reference: 'Standard glass partition setup',
@@ -1024,7 +1050,7 @@ Quote:
 
   const handleStartManualQuote = () => {
     setActiveQuote({
-      quote_number: 'MEA-' + new Date().getFullYear() + '-' + String(Math.floor(1000 + Math.random() * 9000)),
+      quote_number: getNextSeqQuoteNumber(quotes),
       client_name: '',
       gstin: '',
       date: new Date().toISOString().split('T')[0],
@@ -1050,7 +1076,7 @@ Quote:
 
   const handleStartAIQuote = () => {
     setActiveQuote({
-      quote_number: 'MEA-' + new Date().getFullYear() + '-' + String(Math.floor(1000 + Math.random() * 9000)),
+      quote_number: getNextSeqQuoteNumber(quotes),
       client_name: '',
       gstin: '',
       date: new Date().toISOString().split('T')[0],
@@ -1280,7 +1306,7 @@ Quote:
         client_name: 'Simulated Client Ltd',
         date: new Date().toISOString().split('T')[0],
         validity: '15 Days',
-        quote_number: 'MEA-' + new Date().getFullYear() + '-' + String(Math.floor(1000 + Math.random() * 9000)),
+        quote_number: getNextSeqQuoteNumber(quotes),
         reference: 'Standard Structural Glazing Works',
         status: 'Draft',
         format: 'proposal',
