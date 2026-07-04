@@ -181,7 +181,6 @@ export default function Clients({ clients, onSaveClient, onDeleteClient, isAdmin
       {/* Clients Cards List */}
       {filteredClients.length === 0 ? (
         <div className="border border-[var(--ui-border)] border-dashed rounded-lg p-6 text-center text-xs">
-          <Building className="mx-auto text-[var(--ui-text-muted)] mb-2" size={32} />
           <h4 className="font-semibold text-zinc-700">No Contacts Found</h4>
           <p className="text-[10px] text-[var(--ui-text-muted)] mt-1">
             Add repeat clients for rapid, auto-filled quotes.

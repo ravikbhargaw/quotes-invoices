@@ -212,13 +212,15 @@ export default function Settings({ settings, onSaveSettings, currentUserEmail })
   return (
     <div className="space-y-4 animate-fade-in no-print text-left">
       
-      {/* Vertical Pill segmented control */}
+      {/* Horizontal Premium tab controls */}
       <div style={{
         display: 'flex',
-        flexDirection: 'column',
-        gap: '2px',
-        padding: '10px 10px',
-        borderBottom: '1px solid var(--border)'
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: '6px',
+        padding: '12px 14px',
+        borderBottom: '1px solid var(--border)',
+        backgroundColor: '#FAF9F6'
       }}>
         {[
           { key: 'defaults', label: 'Defaults' },
@@ -230,18 +232,15 @@ export default function Settings({ settings, onSaveSettings, currentUserEmail })
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
+            className={activeTab === tab.key ? "btn" : "btn-outline"}
             style={{
-              fontFamily: 'Inter, sans-serif',
-              fontSize: '12px',
-              fontWeight: activeTab === tab.key ? '600' : '400',
-              padding: '9px 14px',
-              textAlign: 'left',
-              background: activeTab === tab.key ? 'var(--steel-pale)' : 'transparent',
-              color: activeTab === tab.key ? 'var(--navy)' : 'var(--muted)',
-              border: 'none',
-              borderLeft: activeTab === tab.key ? '3px solid var(--navy)' : '3px solid transparent',
-              cursor: 'pointer',
-              transition: 'all 0.15s'
+              width: 'auto',
+              flex: '1 0 auto',
+              fontSize: '11px',
+              padding: '6px 12px',
+              justifyContent: 'center',
+              textTransform: 'none',
+              letterSpacing: 'normal'
             }}
           >
             {tab.label}

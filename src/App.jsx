@@ -2088,7 +2088,8 @@ Quote:
                   <button
                     type="button"
                     onClick={() => handleAddItem()}
-                    className="px-2.5 py-1 rounded bg-indigo-50 border border-indigo-100 text-xs font-semibold text-[var(--ui-accent, #4F46E5)] hover:bg-indigo-100 transition-colors cursor-pointer"
+                    className="btn-outline"
+                    style={{ padding: '6px 12px', fontSize: '11px', height: 'auto', width: 'auto' }}
                   >
                     + Add Custom Item
                   </button>
