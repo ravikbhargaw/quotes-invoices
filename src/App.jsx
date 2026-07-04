@@ -702,7 +702,7 @@ Quote:
         if (!key) {
           throw new Error("No xAI (Grok) API Key found. Please add it in Settings → AI Key.");
         }
-        const url = 'https://api.xai.ai/v1/chat/completions';
+        const url = 'https://api.x.ai/v1/chat/completions';
         const response = await fetch(url, {
           method: 'POST',
           headers: {
@@ -1160,7 +1160,7 @@ Quote:
       else if (selectedModel.startsWith('grok')) {
         const key = settings.xaiApiKey?.trim();
         if (!key) throw new Error("No xAI (Grok) API Key found. Please add it in Settings.");
-        const url = 'https://api.xai.ai/v1/chat/completions';
+        const url = 'https://api.x.ai/v1/chat/completions';
         const response = await fetch(url, {
           method: 'POST',
           headers: {
@@ -1307,7 +1307,10 @@ Quote:
       alert('Billed To (Client Name) is required before saving.');
       return;
     }
-    await saveQuote(activeQuote);
+    const saved = await saveQuote(activeQuote);
+    if (saved) {
+      setActiveQuote(saved);
+    }
     setIsDirty(false);
     alert('Quote saved successfully to database/local history!');
     loadData();
@@ -1354,7 +1357,16 @@ Quote:
     alert('Logo reset to default SVG wordmark.');
   };
 
-  const handlePrint = () => {
+  const handlePrint = async () => {
+    // Automatically save the draft first if a client name is entered
+    if (activeQuote.client_name?.trim()) {
+      const saved = await saveQuote(activeQuote);
+      if (saved) {
+        setActiveQuote(saved);
+      }
+      setIsDirty(false);
+      loadData();
+    }
     // Show instruction overlay before print dialog
     setShowPrintTip(true);
     setTimeout(() => {

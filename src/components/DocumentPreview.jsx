@@ -119,8 +119,8 @@ export default function DocumentPreview({ quote, settings }) {
         background: 'linear-gradient(160deg, #0D1B33 0%, #16294A 100%)',
         color: '#FFFFFF', 
         padding: '40px 44px 34px 44px',
-        borderTopLeftRadius: '0',
-        borderTopRightRadius: '0',
+        borderTopLeftRadius: '12px',
+        borderTopRightRadius: '12px',
         borderBottomLeftRadius: '20px', 
         borderBottomRightRadius: '20px',
         position: 'relative',
@@ -587,7 +587,7 @@ export default function DocumentPreview({ quote, settings }) {
       </div>
 
       {/* E. TOTALS BLOCK */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '24px 32px 0 32px' }}>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '24px 52px 0 32px' }}>
         <div style={{ width: '100%', maxWidth: '380px', display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'right' }}>
           
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11.5px', color: colors.inkSoft }}>
@@ -838,66 +838,59 @@ export default function DocumentPreview({ quote, settings }) {
 
       {/* I. BANK DETAILS & FOOTER */}
       <div className="doc-footer" style={{ 
-        padding: '24px 32px', 
-        marginTop: '32px',
-        textAlign: 'left'
+        background: colors.navyDeep, 
+        color: '#FFFFFF',
+        padding: '20px 44px', 
+        marginTop: '40px',
+        textAlign: 'center',
+        borderBottomLeftRadius: '12px',
+        borderBottomRightRadius: '12px',
+        overflow: 'hidden'
       }}>
-        {/* Navy Bank Card */}
-        <div style={{ 
-          background: colors.navyDeep, 
-          borderRadius: '14px', 
-          padding: '24px',
-          color: '#FFFFFF',
-          marginBottom: '20px'
+        {/* Horizontal Bank Details Row */}
+        <div style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          justifyContent: 'center',
+          alignItems: 'center',
+          gap: '8px 18px',
+          fontFamily: 'Inter, sans-serif',
+          fontSize: '9px',
+          letterSpacing: '0.02em',
+          color: '#E9D6A6',
+          marginBottom: '10px'
         }}>
-          <span style={{ fontSize: '9px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.10em', color: colors.goldSoft, display: 'block', marginBottom: '12px' }}>
-            Corporate Bank Beneficiary
-          </span>
-          <div style={{
-            fontFamily: 'JetBrains Mono, monospace',
-            fontSize: '11px',
-            lineHeight: '1.8'
-          }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '150px 1fr' }}>
-              <span style={{ color: colors.goldSoft }}>Beneficiary Name</span>
-              <span>: {settings.bankDetails?.name || 'MEAVEN DESIGNS PRIVATE LIMITED'}</span>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '150px 1fr' }}>
-              <span style={{ color: colors.goldSoft }}>Account No.</span>
-              <span>: {settings.bankDetails?.accountNo || '50200097556307'}</span>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '150px 1fr' }}>
-              <span style={{ color: colors.goldSoft }}>IFSC</span>
-              <span>: {settings.bankDetails?.ifsc || 'HDFC0001756'}</span>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '150px 1fr' }}>
-              <span style={{ color: colors.goldSoft }}>Bank</span>
-              <span>: {settings.bankDetails?.bankName || 'HDFC Bank, Marathahalli'}</span>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '150px 1fr' }}>
-              <span style={{ color: colors.goldSoft }}>GSTIN</span>
-              <span>: {settings.bankDetails?.gstin || '29AAMCM4939R2ZA'}</span>
-            </div>
+          <div>
+            <strong style={{ color: '#FFFFFF' }}>BENEFICIARY:</strong> {settings.bankDetails?.name || 'MEAVEN DESIGNS PRIVATE LIMITED'}
+          </div>
+          <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: '#E9D6A6', opacity: 0.5 }} />
+          <div>
+            <strong style={{ color: '#FFFFFF' }}>A/C NO:</strong> {settings.bankDetails?.accountNo || '50200097556307'}
+          </div>
+          <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: '#E9D6A6', opacity: 0.5 }} />
+          <div>
+            <strong style={{ color: '#FFFFFF' }}>IFSC:</strong> {settings.bankDetails?.ifsc || 'HDFC0001756'}
+          </div>
+          <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: '#E9D6A6', opacity: 0.5 }} />
+          <div>
+            <strong style={{ color: '#FFFFFF' }}>BANK:</strong> {settings.bankDetails?.bankName || 'HDFC Bank, Marathahalli'}
+          </div>
+          <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: '#E9D6A6', opacity: 0.5 }} />
+          <div>
+            <strong style={{ color: '#FFFFFF' }}>GSTIN:</strong> {settings.bankDetails?.gstin || '29AAMCM4939R2ZA'}
           </div>
         </div>
 
-
-
         {/* System generated note */}
-        <div style={{
-          textAlign: 'center',
-          paddingTop: '16px'
+        <p style={{
+          fontFamily: 'Inter, sans-serif',
+          fontSize: '8.5px',
+          color: '#B9C2D6',
+          letterSpacing: '0.04em',
+          margin: 0
         }}>
-          <p style={{
-            fontFamily: 'Inter, sans-serif',
-            fontSize: '9px',
-            color: colors.inkSoft,
-            letterSpacing: '0.04em',
-            margin: 0
-          }}>
-            Note: This is a system generated quote and doesn't need a signature.
-          </p>
-        </div>
+          Note: This is a system generated quote and doesn't need a signature.
+        </p>
       </div>
     </div>
   );
