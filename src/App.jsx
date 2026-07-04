@@ -8,7 +8,7 @@ import {
   getQuotes, saveQuote, deleteQuote, 
   getClients, saveClient, deleteClient, 
   getSettings, saveSettings, getSupabase,
-  getCachedSettingsSync
+  getCachedSettingsSync, syncLocalDataToCloud
 } from './utils/db';
 import DocumentPreview from './components/DocumentPreview';
 import Clients from './components/Clients';
@@ -208,7 +208,21 @@ export default function App() {
     setSettings(loadedSettings);
     
     const supabase = getSupabase();
-    setDbConnected(!!supabase);
+    const isConn = !!supabase;
+    setDbConnected(isConn);
+
+    if (isConn) {
+      try {
+        const localQuotes = JSON.parse(localStorage.getItem('meaven_quotes') || '[]');
+        const localClients = JSON.parse(localStorage.getItem('meaven_clients') || '[]');
+        if (localQuotes.length > 0 || localClients.length > 0) {
+          console.log(`Auto-syncing ${localQuotes.length} local quotes and ${localClients.length} local clients...`);
+          await syncLocalDataToCloud();
+        }
+      } catch (err) {
+        console.error('Auto-sync failed:', err);
+      }
+    }
 
     const loadedQuotes = await getQuotes();
     setQuotes(loadedQuotes);

@@ -3,7 +3,7 @@ import {
   Save, Database, Sparkles, FileText, ClipboardList, Trash2, Plus, 
   RotateCcw, AlertCircle, CheckCircle, WifiOff 
 } from 'lucide-react';
-import { testSupabaseConnection, syncLocalDataToCloud } from '../utils/db';
+import { testSupabaseConnection } from '../utils/db';
 
 export default function Settings({ settings, onSaveSettings, currentUserEmail }) {
   const [activeTab, setActiveTab] = useState('supabase'); // 'supabase', 'gemini', 'products', 'defaults'
@@ -129,17 +129,7 @@ export default function Settings({ settings, onSaveSettings, currentUserEmail })
     setConnStatus(result);
   };
 
-  const handleSyncData = async () => {
-    if (!confirm('This will copy all your local quotes and clients to Supabase, then empty your browser storage. Do you want to proceed?')) {
-      return;
-    }
-    setSyncStatus({ success: true, message: 'Syncing data to cloud...' });
-    const result = await syncLocalDataToCloud();
-    setSyncStatus(result);
-    if (result.success) {
-      setTimeout(() => setSyncStatus(null), 5000);
-    }
-  };
+
 
   // Logo Upload handlers
   const handleLogoUpload = (e) => {
@@ -328,24 +318,7 @@ export default function Settings({ settings, onSaveSettings, currentUserEmail })
               </button>
             </div>
 
-            <div className="pt-3 border-t border-[var(--ui-border)] space-y-2">
-              <label className="input-label">Data Sync Utility</label>
-              <button
-                type="button"
-                onClick={handleSyncData}
-                className="btn-outline w-full py-2 text-xs border-amber-500/20 text-amber-700 bg-amber-50 hover:bg-amber-100"
-              >
-                Sync Local Data to Cloud
-              </button>
-              
-              {syncStatus && (
-                <div className={`p-2 rounded text-[10px] text-center border ${
-                  syncStatus.success ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 'bg-rose-50 border-rose-100 text-rose-700'
-                }`}>
-                  {syncStatus.message}
-                </div>
-              )}
-            </div>
+
           </div>
         )}
 
