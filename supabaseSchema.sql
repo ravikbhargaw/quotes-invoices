@@ -36,6 +36,7 @@ CREATE TABLE IF NOT EXISTS public.quotes (
     subtotal NUMERIC NOT NULL DEFAULT 0,
     tax NUMERIC NOT NULL DEFAULT 0,
     total NUMERIC NOT NULL DEFAULT 0,
+    desc TEXT,
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now()
 );

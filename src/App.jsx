@@ -469,6 +469,101 @@ Quote:
     return dateStr;
   };
 
+  // Shared Helper for calling AI for plain text generation
+  const generateTextWithAI = async (prompt, systemPrompt = "You are a professional assistant.") => {
+    const selectedModel = settings.selectedModel || 'gemini-2.5-flash';
+    
+    if (selectedModel.startsWith('gemini')) {
+      const key = settings.geminiApiKey?.trim();
+      if (!key) throw new Error("No Gemini API Key found. Please add it in Settings.");
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${key}`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            parts: [
+              { text: systemPrompt },
+              { text: prompt }
+            ]
+          }]
+        })
+      });
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      const data = await response.json();
+      return data.candidates[0].content.parts[0].text.trim();
+    }
+    
+    if (selectedModel.startsWith('gpt')) {
+      const key = settings.openaiApiKey?.trim();
+      if (!key) throw new Error("No OpenAI API Key found. Please add it in Settings.");
+      const url = 'https://api.openai.com/v1/chat/completions';
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${key}`
+        },
+        body: JSON.stringify({
+          model: selectedModel,
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: prompt }
+          ]
+        })
+      });
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      const data = await response.json();
+      return data.choices[0].message.content.trim();
+    }
+
+    throw new Error(`Unsupported model for direct text generation: ${selectedModel}`);
+  };
+
+  const [generatingSummary, setGeneratingSummary] = useState(false);
+  const handleGenerateSummary = async () => {
+    if (activeQuote.items.length === 0) {
+      alert('Please add items to your quote first.');
+      return;
+    }
+    setGeneratingSummary(true);
+    try {
+      const itemsList = activeQuote.items.map(item => `- ${item.name}: ${item.qty} ${item.unit} (${item.specs?.join(', ') || ''})`).join('\n');
+      const prompt = `Generate a professional executive summary (2-4 sentences) for meaven.in. Scope of work items:\n${itemsList}\nDo not mention any prices.`;
+      const systemPrompt = "You are a professional copywriter for meaven.in (premium glass and aluminium execution). Write a concise summary focusing on structural execution certainty and precise architectural alignment.";
+      const summary = await generateTextWithAI(prompt, systemPrompt);
+      updateQuoteField('desc', summary);
+    } catch (e) {
+      console.error(e);
+      alert('Failed to generate summary: ' + e.message);
+    } finally {
+      setGeneratingSummary(false);
+    }
+  };
+
+  const [generatingUpgradeIdx, setGeneratingUpgradeIdx] = useState(null);
+  const handleGenerateUpgradeSummary = async (idx) => {
+    const item = activeQuote.items[idx];
+    const clientSpec = item.client_spec?.trim();
+    const proposedSpec = (item.proposed_spec || item.our_offer)?.trim();
+    if (!clientSpec || !proposedSpec) {
+      alert('Please enter both Client Spec and Proposed Spec first.');
+      return;
+    }
+    setGeneratingUpgradeIdx(idx);
+    try {
+      const prompt = `Briefly summarize the practical difference (1 short sentence) between these specifications for a glass/aluminium item:\nClient Specified: ${clientSpec}\nMeaven Proposed: ${proposedSpec}`;
+      const systemPrompt = "You are a structural glass engineer for meaven.in. Return ONLY one short sentence (max 12 words) explaining the practical benefit of Meaven's proposed spec. Example: 'Upgraded to Saint-Gobain toughened glass for superior load resistance.'";
+      const summary = await generateTextWithAI(prompt, systemPrompt);
+      handleUpdateItem(idx, 'upgrade_summary', summary);
+    } catch (e) {
+      console.error(e);
+      alert('Failed to generate upgrade summary: ' + e.message);
+    } finally {
+      setGeneratingUpgradeIdx(null);
+    }
+  };
+
   // AI Prompt Parsing Execution
   const handleGenerateAI = async () => {
     if (!aiPrompt.trim()) return;
@@ -621,7 +716,7 @@ Quote:
     }
   };
 
-  const handleParsedAIQuote = (parsed) => {
+  const handleParsedAIQuote = async (parsed) => {
     // 1. Calculate totals for the parsed quote object to show in confirmation card
     const items = parsed.items || [];
     const grossSubtotal = items.reduce((sum, item) => sum + ((parseFloat(item.qty) || 0) * (parseFloat(item.rate) || 0)), 0);
@@ -685,13 +780,47 @@ Quote:
         qty: parseFloat(item.qty) || 0,
         rate: parseFloat(item.rate) || 0,
         specs: item.specs || [],
-        sizes: item.sizes || []
+        sizes: item.sizes || [],
+        client_spec: item.client_spec || '',
+        proposed_spec: item.proposed_spec || item.our_offer || '',
+        upgrade_summary: item.upgrade_summary || ''
       })),
       payment_schedule: (parsed.payment_schedule && parsed.payment_schedule.length > 0) ? parsed.payment_schedule : (parsed.paymentSchedule && parsed.paymentSchedule.length > 0) ? parsed.paymentSchedule : [...settings.paymentSchedule],
       timeline_steps: (parsed.timeline_steps && parsed.timeline_steps.length > 0) ? parsed.timeline_steps : (parsed.timelineSteps && parsed.timelineSteps.length > 0) ? parsed.timelineSteps : [...settings.timelineSteps],
       notes: finalNotes,
       terms: finalTerms
     };
+
+    // Auto-generate Executive Summary & Upgrade Summaries via AI if keys are present
+    const key = settings.geminiApiKey?.trim() || settings.openaiApiKey?.trim();
+    if (key) {
+      try {
+        const itemsList = computedQuote.items.map(item => `- ${item.name}: ${item.qty} ${item.unit} (${item.specs?.join(', ') || ''})`).join('\n');
+        const summaryPrompt = `Generate a professional executive summary (2-4 sentences) for meaven.in. Scope of work items:\n${itemsList}\nDo not mention any prices.`;
+        const summarySystemPrompt = "You are a professional copywriter for meaven.in (premium glass and aluminium execution). Write a concise summary focusing on structural execution certainty and precise architectural alignment. Return ONLY the paragraph.";
+        
+        const summaryPromise = generateTextWithAI(summaryPrompt, summarySystemPrompt)
+          .then(res => { computedQuote.desc = res; })
+          .catch(e => console.error('Failed to auto-generate summary', e));
+
+        const upgradePromises = computedQuote.items.map((item, idx) => {
+          const clientSpec = item.client_spec?.trim();
+          const proposedSpec = (item.proposed_spec || item.our_offer || '')?.trim();
+          if (clientSpec && proposedSpec && !item.upgrade_summary) {
+            const upPrompt = `Briefly summarize the practical difference (1 short sentence) between these specifications for a glass/aluminium item:\nClient Specified: ${clientSpec}\nMeaven Proposed: ${proposedSpec}`;
+            const upSystem = "You are a structural glass engineer for meaven.in. Return ONLY one short sentence (max 12 words) explaining the practical benefit of Meaven's proposed spec. Example: 'Upgraded to Saint-Gobain toughened glass for superior load resistance.'";
+            return generateTextWithAI(upPrompt, upSystem)
+              .then(res => { item.upgrade_summary = res; })
+              .catch(e => console.error('Failed to auto-generate upgrade summary for item ' + idx, e));
+          }
+          return Promise.resolve();
+        });
+
+        await Promise.all([summaryPromise, ...upgradePromises]);
+      } catch (e) {
+        console.error('Failed auto-generating summaries during parsing', e);
+      }
+    }
 
     setParsedAIResult(computedQuote);
   };
@@ -1467,6 +1596,30 @@ Quote:
                 </div>
               </div>
 
+              {/* Executive Summary (AI Generated) */}
+              <div className="form-group">
+                <div className="flex justify-between items-center mb-1">
+                  <label className="input-label mb-0">Executive Summary (AI Generated)</label>
+                  <button
+                    type="button"
+                    onClick={handleGenerateSummary}
+                    disabled={generatingSummary}
+                    className="text-[10px] text-[var(--ui-accent)] hover:underline font-semibold flex items-center gap-1"
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                  >
+                    {generatingSummary ? 'Generating...' : '✨ AI Generate'}
+                  </button>
+                </div>
+                <textarea
+                  rows="3"
+                  value={activeQuote.desc || ''}
+                  onChange={(e) => updateQuoteField('desc', e.target.value)}
+                  placeholder="Summarize the scope of work..."
+                  className="input-field font-sans resize-none h-16"
+                  style={{ padding: '8px 10px', fontSize: '11.5px' }}
+                />
+              </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div className="form-group">
                   <label className="input-label">Date</label>
@@ -1681,16 +1834,43 @@ Quote:
                             />
                           </div>
                           <div className="form-group mb-0">
-                            <label className="input-label" style={{ fontSize: '8px', marginBottom: '3px' }}>Our Offer (Comparison)</label>
+                            <label className="input-label" style={{ fontSize: '8px', marginBottom: '3px' }}>Our Proposed Spec (Comparison)</label>
                             <input 
                               type="text"
-                              value={item.our_offer || ''}
-                              onChange={(e) => handleUpdateItem(idx, 'our_offer', e.target.value)}
+                              value={item.proposed_spec || item.our_offer || ''}
+                              onChange={(e) => {
+                                handleUpdateItem(idx, 'proposed_spec', e.target.value);
+                                handleUpdateItem(idx, 'our_offer', e.target.value);
+                              }}
                               placeholder="e.g. Saint-Gobain 10mm Toughened"
                               className="input-field"
                               style={{ padding: '6px 8px', fontSize: '11px' }}
                             />
                           </div>
+                        </div>
+
+                        {/* Upgrade Summary (AI Generated) */}
+                        <div className="grid grid-cols-[1fr_80px] gap-2 items-end mb-2">
+                          <div className="form-group mb-0">
+                            <label className="input-label" style={{ fontSize: '8px', marginBottom: '3px' }}>Upgrade Summary (AI Generated)</label>
+                            <input 
+                              type="text"
+                              value={item.upgrade_summary || ''}
+                              onChange={(e) => handleUpdateItem(idx, 'upgrade_summary', e.target.value)}
+                              placeholder="e.g. Upgraded to premium Saint-Gobain toughened glass for safety"
+                              className="input-field"
+                              style={{ padding: '6px 8px', fontSize: '11px' }}
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleGenerateUpgradeSummary(idx)}
+                            disabled={generatingUpgradeIdx === idx}
+                            className="btn-outline py-1 text-[10px]"
+                            style={{ height: '28px', padding: '0 4px', fontSize: '9px' }}
+                          >
+                            {generatingUpgradeIdx === idx ? 'Gen...' : '✨ AI Upgrade'}
+                          </button>
                         </div>
 
                         <div className="form-group mb-2">

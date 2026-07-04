@@ -23,8 +23,6 @@
   --navy:       #1B2B45;
   --steel:      #3A6186;
   --steel-pale: #EEF3F8;
-  --gold:       #B8933E;
-  --gold-pale:  #FBF6EE;
   --white:      #FFFFFF;
   --bg:         #F4F4F2;
   --text:       #1A1A1A;
@@ -34,6 +32,19 @@
   --green-pale: #EBF5EF;
   --red-pale:   #FEF2F2;
   --red:        #991B1B;
+
+  /* Redesign Document Theme */
+  --ink: #12213F;
+  --ink-soft: #3C4A6B;
+  --navy-deep: #0D1B33;
+  --gold: #BD8C2E;
+  --gold-soft: #E9D6A6;
+  --paper: #FAF9F6;
+  --card: #FFFFFF;
+  --line: #E6E3DA;
+  --line-soft: #EFEDE6;
+  --standard: #9A6A5A;
+  --proposed: #2E6B52;
 }
 
 body {

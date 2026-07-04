@@ -85,218 +85,324 @@ export default function DocumentPreview({ quote, settings }) {
   };
 
   // Align field name mismatch: use either quote_number or estimate_no
-  const quoteNumber = quote.quote_number || quote.estimate_no || '';
+  const quoteNumber = quote.quote_number || quote.estimate_no || '';  const colors = {
+    ink: '#12213F',
+    inkSoft: '#3C4A6B',
+    navyDeep: '#0D1B33',
+    gold: '#BD8C2E',
+    goldSoft: '#E9D6A6',
+    paper: '#FAF9F6',
+    card: '#FFFFFF',
+    line: '#E6E3DA',
+    lineSoft: '#EFEDE6',
+    standard: '#9A6A5A',
+    proposed: '#2E6B52'
+  };
 
   const sectionHeadingStyle = {
     fontFamily: 'Plus Jakarta Sans, sans-serif',
-    fontSize: '16px',
-    fontWeight: '700',
-    color: 'var(--navy, #1B2B45)',
-    borderBottom: '1px solid var(--border, #E2E2DE)',
-    paddingBottom: '8px',
-    marginBottom: '14px',
-    letterSpacing: '-0.01em'
+    fontSize: '13px',
+    fontWeight: '800',
+    color: colors.ink,
+    borderLeft: `4px solid ${colors.gold}`,
+    paddingLeft: '10px',
+    marginBottom: '16px',
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase'
   };
 
   return (
-    <div className="doc-container" id="docCanvas">
+    <div className="doc-container" id="docCanvas" style={{ background: colors.paper, color: colors.ink, fontFamily: 'Inter, sans-serif' }}>
       
-      {/* 1. HEADER (Navy background, Plus Jakarta Sans) */}
-      <div className="doc-header" style={{ background: 'var(--navy)', color: 'var(--white)', padding: '24px 30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div className="doc-logo-box" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          {settings.companyLogo ? (
-            <img 
-              src={settings.companyLogo} 
-              alt="meaven.in Logo" 
-              style={{ height: `${settings.logoHeight || 40}px`, objectFit: 'contain' }}
-            />
-          ) : (
-            <span style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '24px', fontWeight: '700', letterSpacing: '0.05em', color: 'var(--gold)' }}>
-              meaven.in
+      {/* A. HEADER (Dark navy deep background, rounded bottom corners) */}
+      <div className="doc-header" style={{ 
+        background: colors.navyDeep, 
+        color: '#FFFFFF', 
+        padding: '32px 32px', 
+        borderBottomLeftRadius: '14px', 
+        borderBottomRightRadius: '14px',
+        textAlign: 'left'
+      }}>
+        {/* Top Header Row */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '24px' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
+              {settings.companyLogo ? (
+                <img 
+                  src={settings.companyLogo} 
+                  alt="meaven.in Logo" 
+                  style={{ height: `${settings.logoHeight || 38}px`, objectFit: 'contain' }}
+                />
+              ) : (
+                <span style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '24px', fontWeight: '800', letterSpacing: '-0.02em', color: '#FFFFFF' }}>
+                  meaven<span style={{ color: colors.goldSoft }}>.in</span>
+                </span>
+              )}
+            </div>
+            <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '9px', fontWeight: '700', letterSpacing: '0.08em', color: colors.goldSoft, opacity: 0.8 }}>
+              GLASS &amp; ALUMINIUM EXECUTION
             </span>
-          )}
+          </div>
+
+          <div style={{ textAlign: 'right' }}>
+            <span style={{ 
+              fontFamily: 'Plus Jakarta Sans, sans-serif', 
+              fontSize: '11px', 
+              fontWeight: '800', 
+              background: 'rgba(233, 214, 166, 0.1)', 
+              color: colors.goldSoft, 
+              padding: '4px 10px', 
+              borderRadius: '2px', 
+              textTransform: 'uppercase', 
+              letterSpacing: '0.1em'
+            }}>
+              {quote.format === 'proposal' ? 'Project Proposal' : 'Commercial Estimate'}
+            </span>
+            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '11px', color: '#FFFFFF', marginTop: '10px', opacity: 0.9 }}>
+              No: {quoteNumber || '—'}
+            </div>
+            {quote.validity && (
+              <span style={{ 
+                display: 'inline-block', 
+                fontSize: '8px', 
+                fontWeight: '700', 
+                color: colors.navyDeep, 
+                background: colors.goldSoft, 
+                padding: '2px 8px', 
+                borderRadius: '10px', 
+                marginTop: '6px', 
+                textTransform: 'uppercase', 
+                letterSpacing: '0.05em' 
+              }}>
+                VALID {quote.validity}
+              </span>
+            )}
+          </div>
         </div>
-        
-        <div style={{ textAlign: 'right' }}>
-          <div style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '26px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--gold)' }}>
-            {quote.format === 'proposal' ? 'Proposal' : 'Quotation'}
+
+        {/* Project Reference Line */}
+        {quote.reference && (
+          <div style={{ 
+            borderTop: '1px solid rgba(255, 255, 255, 0.1)', 
+            paddingTop: '16px', 
+            marginBottom: '16px' 
+          }}>
+            <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '9px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.08em', color: colors.goldSoft, opacity: 0.7, display: 'block', marginBottom: '2px' }}>
+              Subject / Project Reference
+            </span>
+            <h1 style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '18px', fontWeight: '700', color: '#FFFFFF', margin: 0 }}>
+              {quote.reference}
+            </h1>
           </div>
-          <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '11px', marginTop: '4px', opacity: 0.85 }}>
-            No: {quote.estimate_no || quote.quote_number || '—'} &nbsp;·&nbsp; {displayDate()}
+        )}
+
+        {/* Facts row */}
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: '1.2fr 1fr 1fr', 
+          gap: '16px', 
+          borderTop: '1px solid rgba(255, 255, 255, 0.1)', 
+          paddingTop: '16px',
+          fontSize: '11px'
+        }}>
+          <div>
+            <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '9px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.08em', color: colors.goldSoft, opacity: 0.7, display: 'block', marginBottom: '2px' }}>Billed To</span>
+            <strong style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '13px', fontWeight: '700', color: '#FFFFFF' }}>{quote.client_name || '—'}</strong>
           </div>
-          <div className="validity-pill" style={{ display: 'inline-block', background: 'var(--gold)', color: 'var(--navy)', fontSize: '8px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.08em', padding: '2px 8px', borderRadius: '10px', marginTop: '6px' }}>
-            Valid: {quote.validity || '15 Days'}
+          <div>
+            <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '9px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.08em', color: colors.goldSoft, opacity: 0.7, display: 'block', marginBottom: '2px' }}>Client GSTIN</span>
+            <span style={{ fontFamily: 'JetBrains Mono, monospace', color: '#FFFFFF', opacity: 0.9 }}>{quote.gstin || '—'}</span>
+          </div>
+          <div>
+            <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '9px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.08em', color: colors.goldSoft, opacity: 0.7, display: 'block', marginBottom: '2px' }}>Date Issued</span>
+            <span style={{ fontFamily: 'Inter, sans-serif', color: '#FFFFFF', opacity: 0.9 }}>{displayDate()}</span>
           </div>
         </div>
       </div>
 
-      {/* 2. SUBJECT BAND (steel-pale bg, steel left border 3px, no side margins) */}
-      {quote.reference && (
-        <div style={{ background: 'var(--steel-pale)', borderLeft: '3px solid var(--steel)', padding: '12px 24px', margin: '20px 0 10px', textAlign: 'left' }}>
-          <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '9px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--steel)', display: 'block', marginBottom: '2px' }}>
-            Subject / Project Reference
-          </span>
-          <span style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '15px', color: 'var(--navy)', fontWeight: '600', }}>
-            {quote.reference}
-          </span>
-        </div>
-      )}
-
-      {/* 3. METADATA BAND */}
-      <div className="doc-meta" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px', padding: '15px 30px', borderBottom: '1px solid var(--border)', textAlign: 'left' }}>
-        <div>
-          <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '9px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--muted)', display: 'block', marginBottom: '2px' }}>Billed To</span>
-          <p style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '14px', fontWeight: '700', color: 'var(--navy)' }}>{quote.client_name || '—'}</p>
-        </div>
-        <div>
-          <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '9px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--muted)', display: 'block', marginBottom: '2px' }}>Client GSTIN</span>
-          <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '11px', color: 'var(--text)' }}>{quote.gstin || '—'}</p>
-        </div>
-        <div>
-          <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '9px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--muted)', display: 'block', marginBottom: '2px' }}>Date Issued</span>
-          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: 'var(--text)' }}>{displayDate()}</p>
-        </div>
-      </div>
-
-      {/* PROPOSAL EXECUTIVE SUMMARY & COMPOSITIONS */}
-      {quote.format === 'proposal' && (
-        <div style={{ padding: '0 30px', textAlign: 'left' }}>
-          {/* Executive Summary */}
-          <div style={{ padding: '20px 0', borderBottom: '1px solid var(--border)' }}>
+      {/* B. EXECUTIVE SUMMARY */}
+      {quote.format === 'proposal' && quote.desc && (
+        <div style={{ padding: '24px 32px 0 32px' }}>
+          <div style={{ 
+            background: colors.card, 
+            borderRadius: '14px', 
+            border: `1px solid ${colors.lineSoft}`, 
+            boxShadow: '0 1px 2px rgba(18,33,63,0.04), 0 8px 24px rgba(18,33,63,0.05)', 
+            padding: '24px',
+            textAlign: 'left'
+          }}>
             <h2 style={sectionHeadingStyle}>
               Executive Summary
             </h2>
-            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12.5px', color: 'var(--text)', lineHeight: '1.6' }}>
-              {quote.desc || 'Meaven is pleased to submit this commercial-grade glass and aluminium solution proposal. Our solution utilizes certified Tier-1 processing systems to achieve structural execution certainty and precise architectural alignment.'}
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12.5px', color: colors.inkSoft, lineHeight: '1.6', margin: 0 }}>
+              {quote.desc}
             </p>
-          </div>
-
-          {/* The Meaven Difference Specification Comparison */}
-          {items.some(item => item.client_spec || item.our_offer) && (
-            <div style={{ padding: '20px 0', borderBottom: '1px solid var(--border)' }}>
-              <h2 style={sectionHeadingStyle}>
-                The Meaven Difference: Specifications Comparison
-              </h2>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {items.filter(item => item.client_spec || item.our_offer).map((item, idx) => (
-                  <div key={idx} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                    <div style={{ background: 'var(--red-pale)', padding: '12px', borderRadius: '3px', borderLeft: '3px solid var(--red)' }}>
-                      <span style={{ fontSize: '8px', fontWeight: '700', textTransform: 'uppercase', color: 'var(--red)', display: 'block', marginBottom: '4px' }}>
-                        Client Specified / Standard
-                      </span>
-                      <strong style={{ fontSize: '11px', display: 'block', color: '#111' }}>{item.name}</strong>
-                      <p style={{ fontSize: '10.5px', color: '#333', marginTop: '2px' }}>{item.client_spec || 'Standard generic specifications'}</p>
-                    </div>
-                    <div style={{ background: 'var(--green-pale)', padding: '12px', borderRadius: '3px', borderLeft: '3px solid var(--green)' }}>
-                      <span style={{ fontSize: '8px', fontWeight: '700', textTransform: 'uppercase', color: 'var(--green)', display: 'block', marginBottom: '4px' }}>
-                        Our Proposed Offer (meaven.in)
-                      </span>
-                      <strong style={{ fontSize: '11px', display: 'block', color: '#111' }}>{item.name}</strong>
-                      <p style={{ fontSize: '10.5px', color: '#333', marginTop: '2px' }}>{item.our_offer || 'Premium high-tensile glass alignment'}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div style={{ padding: '20px 0 0' }}>
-            <h2 style={sectionHeadingStyle}>
-              Commercial Specifications
-            </h2>
           </div>
         </div>
       )}
 
-      {/* 4. LINE ITEMS SECTION */}
-      <div style={{ padding: '15px 30px' }}>
-        {/* Table Headers */}
-        <div style={{ display: 'grid', gridTemplateColumns: '35px 1fr 50px 140px 100px', borderBottom: '2px solid var(--navy)', paddingBottom: '8px', fontSize: '9px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--muted)', textAlign: 'left' }}>
-          <span>#</span>
-          <span>Item &amp; Specifications</span>
-          <span style={{ textAlign: 'right', paddingLeft: '8px' }}>Qty</span>
-          <span style={{ textAlign: 'right', paddingLeft: '8px' }}>Rate</span>
-          <span style={{ textAlign: 'right', paddingLeft: '12px' }}>Amount</span>
-        </div>
+      {/* C. SPECIFICATION COMPARISON */}
+      {quote.format === 'proposal' && items.some(item => item.client_spec || item.proposed_spec || item.our_offer) && (
+        <div style={{ padding: '24px 32px 0 32px', textAlign: 'left' }}>
+          <h2 style={sectionHeadingStyle}>
+            Where We've Upgraded Your Spec
+          </h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {items.filter(item => item.client_spec || item.proposed_spec || item.our_offer).map((item, idx) => {
+              const proposedSpecVal = item.proposed_spec || item.our_offer || '';
+              return (
+                <div key={idx} style={{ 
+                  background: colors.card, 
+                  borderRadius: '14px', 
+                  border: `1px solid ${colors.lineSoft}`, 
+                  boxShadow: '0 1px 2px rgba(18,33,63,0.04), 0 8px 24px rgba(18,33,63,0.05)', 
+                  padding: '20px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '12px'
+                }}>
+                  {/* Two spec columns */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                    {/* Client Spec */}
+                    <div style={{ borderLeft: `3px solid ${colors.standard}`, paddingLeft: '12px' }}>
+                      <span style={{ fontSize: '9px', fontWeight: '700', textTransform: 'uppercase', color: colors.standard, letterSpacing: '0.05em', display: 'block', marginBottom: '4px' }}>
+                        Client Specified / Standard
+                      </span>
+                      <strong style={{ fontSize: '12px', color: colors.ink, display: 'block', marginBottom: '4px' }}>{item.name}</strong>
+                      <p style={{ fontSize: '11px', color: colors.inkSoft, margin: 0, lineHeight: 1.4 }}>{item.client_spec || 'Standard generic specifications'}</p>
+                    </div>
 
-        {/* Dynamic Item Rows */}
-        <div className="divide-y divide-[var(--border)]">
+                    {/* Proposed Spec */}
+                    <div style={{ background: '#F1F7F3', borderLeft: `3px solid ${colors.proposed}`, padding: '10px 12px', borderRadius: '4px' }}>
+                      <span style={{ fontSize: '9px', fontWeight: '700', textTransform: 'uppercase', color: colors.proposed, letterSpacing: '0.05em', display: 'block', marginBottom: '4px' }}>
+                        Meaven Proposed spec
+                      </span>
+                      <strong style={{ fontSize: '12px', color: colors.ink, display: 'block', marginBottom: '4px' }}>{item.name}</strong>
+                      <p style={{ fontSize: '11px', color: colors.proposed, margin: 0, lineHeight: 1.4 }}>{proposedSpecVal || 'Premium high-tensile glass alignment'}</p>
+                    </div>
+                  </div>
+
+                  {/* AI Upgrade summary callout line */}
+                  {item.upgrade_summary && (
+                    <div style={{ 
+                      background: 'rgba(189, 140, 46, 0.05)', 
+                      border: `1px dashed ${colors.gold}`, 
+                      borderRadius: '4px',
+                      padding: '8px 12px',
+                      fontSize: '11px',
+                      color: colors.gold,
+                      fontWeight: '600',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}>
+                      <span>✨</span>
+                      <span><strong>Upgrade:</strong> {item.upgrade_summary}</span>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* D. COMMERCIAL SPECIFICATIONS */}
+      <div style={{ padding: '24px 32px 0 32px', textAlign: 'left' }}>
+        <h2 style={sectionHeadingStyle}>
+          Commercial Specifications
+        </h2>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {items.map((item, index) => {
             const itemDiscount = parseFloat(item.discount) || 0;
             const itemGrossAmount = (item.qty || 0) * (item.rate || 0);
             const itemNetAmount = itemGrossAmount * (1 - itemDiscount / 100);
 
             return (
-              <div key={index} style={{ display: 'grid', gridTemplateColumns: '35px 1fr 50px 140px 100px', paddingTop: '14px', paddingBottom: '14px', textAlign: 'left', alignItems: 'start', pageBreakInside: 'avoid', breakInside: 'avoid' }}>
-                {/* Large italic number (Visible color) */}
-                <div style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '20px', color: 'rgba(58, 97, 134, 0.2)', fontWeight: '700', lineHeight: 1 }}>
+              <div 
+                key={index} 
+                className="line-item"
+                style={{ 
+                  background: colors.card, 
+                  borderRadius: '14px', 
+                  border: `1px solid ${colors.lineSoft}`, 
+                  boxShadow: '0 1px 2px rgba(18,33,63,0.04), 0 8px 24px rgba(18,33,63,0.05)', 
+                  padding: '20px',
+                  display: 'grid',
+                  gridTemplateColumns: '40px 1fr 240px',
+                  gap: '12px',
+                  alignItems: 'start',
+                  pageBreakInside: 'avoid',
+                  breakInside: 'avoid'
+                }}
+              >
+                {/* 01, 02 Number */}
+                <div style={{ 
+                  fontFamily: 'Plus Jakarta Sans, sans-serif', 
+                  fontSize: '18px', 
+                  color: colors.gold, 
+                  fontWeight: '800', 
+                  lineHeight: 1.1 
+                }}>
                   {String(index + 1).padStart(2, '0')}
                 </div>
-                
-                <div style={{ paddingRight: '15px' }}>
-                  <div style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '15px', fontWeight: '700', color: 'var(--navy)' }}>
+
+                {/* Main Details Column */}
+                <div style={{ paddingRight: '16px' }}>
+                  <h3 style={{ 
+                    fontFamily: 'Plus Jakarta Sans, sans-serif', 
+                    fontSize: '14px', 
+                    fontWeight: '700', 
+                    color: colors.ink,
+                    margin: '0 0 6px 0'
+                  }}>
                     {item.name}
-                  </div>
-                  
-                  {/* Spec tags (Key spec chips vs generic specs) */}
+                  </h3>
+
+                  {/* Spec chips */}
                   {item.specs && item.specs.length > 0 && (
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '6px' }}>
-                      {item.specs.map((spec, sidx) => {
-                        const isKeySpec = spec.toLowerCase().includes('saint') || 
-                                          spec.toLowerCase().includes('mm') || 
-                                          spec.toLowerCase().includes('ozone') || 
-                                          spec.toLowerCase().includes('dorma') || 
-                                          spec.toLowerCase().includes('toughened');
-                        return (
-                          <span 
-                            key={sidx} 
-                            style={{ 
-                              fontSize: '9px', 
-                              fontWeight: '600', 
-                              padding: '2px 8px', 
-                              borderRadius: '4px',
-                              background: isKeySpec ? 'var(--gold-pale)' : '#F2F2EF', 
-                              color: isKeySpec ? 'var(--gold)' : 'var(--muted)',
-                              border: isKeySpec ? '1px solid rgba(184,147,62,0.15)' : '1px solid #E2E2DE'
-                            }}
-                          >
-                            {spec}
-                          </span>
-                        );
-                      })}
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' }}>
+                      {item.specs.map((spec, sidx) => (
+                        <span key={sidx} style={{ 
+                          fontSize: '9px', 
+                          fontWeight: '600', 
+                          padding: '2px 8px', 
+                          borderRadius: '4px',
+                          background: colors.paper,
+                          color: colors.inkSoft,
+                          border: `1px solid ${colors.line}`
+                        }}>
+                          {spec}
+                        </span>
+                      ))}
                     </div>
                   )}
 
-                  {/* Hardware display below specs */}
-                  {item.hardware && (
-                    <div style={{ marginTop: '8px', fontSize: '11px', color: 'var(--muted)', lineHeight: '1.5' }}>
-                      <strong>Hardware:</strong>&nbsp; {item.hardware}
-                    </div>
-                  )}
-
-                  {/* Short Description */}
+                  {/* Description / Hardware */}
                   {item.desc && (
-                    <p style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '6px', lineHeight: '1.5' }}>
+                    <p style={{ fontSize: '11px', color: colors.inkSoft, margin: '0 0 6px 0', lineHeight: 1.5 }}>
                       {item.desc}
                     </p>
                   )}
+                  {item.hardware && (
+                    <div style={{ fontSize: '11px', color: colors.inkSoft, margin: '0 0 6px 0', lineHeight: 1.5 }}>
+                      <strong>Hardware:</strong> {item.hardware}
+                    </div>
+                  )}
 
-                  {/* Size pills */}
+                  {/* Dimension chips */}
                   {item.sizes && item.sizes.length > 0 && (
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '6px' }}>
                       {item.sizes.map((sz, szidx) => (
-                        <span 
-                          key={szidx} 
-                          style={{ 
-                            fontFamily: 'JetBrains Mono, monospace', 
-                            fontSize: '9.5px', 
-                            background: 'var(--steel-pale)', 
-                            color: 'var(--steel)', 
-                            padding: '1px 6px', 
-                            borderRadius: '3px',
-                            border: '1px solid rgba(58,97,134,0.1)'
-                          }}
-                        >
+                        <span key={szidx} style={{ 
+                          fontFamily: 'JetBrains Mono, monospace', 
+                          fontSize: '9px', 
+                          background: 'rgba(58, 97, 134, 0.05)', 
+                          color: colors.inkSoft, 
+                          padding: '1px 6px', 
+                          borderRadius: '3px',
+                          border: `1px solid ${colors.lineSoft}`
+                        }}>
                           {sz}
                         </span>
                       ))}
@@ -304,31 +410,42 @@ export default function DocumentPreview({ quote, settings }) {
                   )}
                 </div>
 
-                {/* Qty / Rate / Amount Column Data */}
-                <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '12px', color: 'var(--text)', textAlign: 'right', paddingLeft: '8px' }}>
-                  {item.qty} <span style={{ fontSize: '9px', color: 'var(--muted)' }}>{item.unit}</span>
-                </div>
-                
-                <div style={{ textAlign: 'right', paddingLeft: '8px', whiteSpace: 'nowrap' }}>
-                  {itemDiscount > 0 ? (
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px' }}>
-                      <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '10px', color: 'var(--muted)', textDecoration: 'line-through' }}>
+                {/* Right Columns: Qty, Rate, Amount (Fixed widths to prevent overlap) */}
+                <div style={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: '60px 100px 80px', 
+                  gap: '8px', 
+                  textAlign: 'right',
+                  alignItems: 'center',
+                  height: '100%'
+                }}>
+                  {/* Qty */}
+                  <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '11.5px', color: colors.ink, fontWeight: '500' }}>
+                    {item.qty} <span style={{ fontSize: '8.5px', color: colors.inkSoft }}>{item.unit}</span>
+                  </div>
+
+                  {/* Rate */}
+                  <div style={{ whiteSpace: 'nowrap' }}>
+                    {itemDiscount > 0 ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', alignItems: 'flex-end' }}>
+                        <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '9px', color: colors.inkSoft, textDecoration: 'line-through' }}>
+                          ₹{Math.round(item.rate || 0).toLocaleString('en-IN')}
+                        </span>
+                        <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '11.5px', color: colors.proposed, fontWeight: '600' }}>
+                          ₹{Math.round(item.rate * (1 - itemDiscount / 100)).toLocaleString('en-IN')}
+                        </span>
+                      </div>
+                    ) : (
+                      <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '11.5px', color: colors.ink }}>
                         ₹{Math.round(item.rate || 0).toLocaleString('en-IN')}
                       </span>
-                      <span style={{ fontSize: '10px', color: 'var(--muted)' }}>→</span>
-                      <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '12px', color: 'var(--green)', fontWeight: '600' }}>
-                        ₹{Math.round(item.rate * (1 - itemDiscount / 100)).toLocaleString('en-IN')}
-                      </span>
-                    </div>
-                  ) : (
-                    <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '12px', color: 'var(--text)' }}>
-                      ₹{Math.round(item.rate || 0).toLocaleString('en-IN')}
-                    </span>
-                  )}
-                </div>
+                    )}
+                  </div>
 
-                <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '12px', fontWeight: '600', color: 'var(--navy)', textAlign: 'right', paddingLeft: '12px' }}>
-                  ₹{Math.round(itemNetAmount).toLocaleString('en-IN')}
+                  {/* Amount */}
+                  <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '12px', fontWeight: '700', color: colors.ink }}>
+                    ₹{Math.round(itemNetAmount).toLocaleString('en-IN')}
+                  </div>
                 </div>
               </div>
             );
@@ -336,28 +453,19 @@ export default function DocumentPreview({ quote, settings }) {
         </div>
       </div>
 
-      {/* 5. TOTALS BLOCK */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '15px 30px' }}>
-        <div style={{ width: '100%', maxWidth: '360px', display: 'flex', flexDirection: 'column', gap: '6px', textAlign: 'right' }}>
+      {/* E. TOTALS BLOCK */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '24px 32px 0 32px' }}>
+        <div style={{ width: '100%', maxWidth: '380px', display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'right' }}>
           
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--muted)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11.5px', color: colors.inkSoft }}>
             <span>Subtotal (Gross)</span>
-            <span style={{ fontFamily: 'JetBrains Mono, monospace' }}>
-              ₹{Math.round(grossSubtotal).toLocaleString('en-IN')}
+            <span style={{ fontFamily: 'JetBrains Mono, monospace', fontWeight: '500', color: colors.ink }}>
+              ₹{Math.round(subtotalAfterItemDiscounts).toLocaleString('en-IN')}
             </span>
           </div>
 
-          {totalItemDiscounts > 0 && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', fontWeight: '700', color: 'var(--green)' }}>
-              <span>Item Discounts</span>
-              <span style={{ fontFamily: 'JetBrains Mono, monospace' }}>
-                − ₹{Math.round(totalItemDiscounts).toLocaleString('en-IN')}
-              </span>
-            </div>
-          )}
-
           {quoteDiscountPct > 0 && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--green)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11.5px', color: colors.proposed, fontWeight: '600' }}>
               <span>Quote Discount ({quoteDiscountPct}%)</span>
               <span style={{ fontFamily: 'JetBrains Mono, monospace' }}>
                 − ₹{Math.round(quoteDiscountAmount).toLocaleString('en-IN')}
@@ -365,76 +473,106 @@ export default function DocumentPreview({ quote, settings }) {
             </div>
           )}
 
-          {/* Conditional Adjusted Subtotal row: only render when discounts are present */}
-          {(totalItemDiscounts > 0 || quoteDiscountPct > 0) && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11.5px', fontWeight: '600', color: 'var(--text)', borderTop: '1px solid var(--border)', paddingTop: '6px' }}>
-              <span>Adjusted Subtotal</span>
-              <span style={{ fontFamily: 'JetBrains Mono, monospace' }}>
-                ₹{Math.round(adjustedSubtotal).toLocaleString('en-IN')}
-              </span>
-            </div>
-          )}
-
-          {flatAdjustment !== 0 && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: flatAdjustment < 0 ? 'var(--red)' : 'var(--text)' }}>
-              <span>Adjustment / Offset</span>
-              <span style={{ fontFamily: 'JetBrains Mono, monospace' }}>
-                {flatAdjustment < 0 ? '− ' : '+ '}₹{Math.abs(Math.round(flatAdjustment)).toLocaleString('en-IN')}
-              </span>
-            </div>
-          )}
-
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--muted)' }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              GST (18%) <span style={{ fontSize: '8px', background: 'var(--steel-pale)', color: 'var(--steel)', padding: '1px 4px', borderRadius: '3px', fontWeight: '700' }}>TAX</span>
-            </span>
+          {/* Taxable Value */}
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            fontSize: '11.5px', 
+            fontWeight: '600', 
+            color: colors.ink, 
+            borderTop: `1px solid ${colors.line}`, 
+            paddingTop: '8px' 
+          }}>
+            <span>Taxable Value</span>
             <span style={{ fontFamily: 'JetBrains Mono, monospace' }}>
+              ₹{Math.round(taxableAmount).toLocaleString('en-IN')}
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11.5px', color: colors.inkSoft }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              GST (18%) <span style={{ fontSize: '8px', background: 'rgba(58, 97, 134, 0.05)', color: colors.inkSoft, padding: '1px 4px', borderRadius: '3px', fontWeight: '700' }}>TAX</span>
+            </span>
+            <span style={{ fontFamily: 'JetBrains Mono, monospace', color: colors.ink }}>
               ₹{Math.round(tax).toLocaleString('en-IN')}
             </span>
           </div>
 
-          {/* Grand Total Box (Set borderRadius to 0px to prevent clipping) */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--navy)', color: 'var(--white)', padding: '10px 14px', borderRadius: '0px', marginTop: '6px' }}>
-            <span style={{ fontSize: '9px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+          {/* Grand Total Bar */}
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center', 
+            background: colors.navyDeep, 
+            color: '#FFFFFF', 
+            padding: '12px 16px', 
+            borderRadius: '4px', 
+            marginTop: '8px' 
+          }}>
+            <span style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
               Grand Total
             </span>
-            <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '20px', fontWeight: '700' }}>
+            <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '18px', fontWeight: '800' }}>
               ₹{Math.round(grandTotal).toLocaleString('en-IN')}
             </span>
           </div>
         </div>
       </div>
 
-      {/* 6. TOTAL IN WORDS (Full width styled band) */}
-      <div style={{ background: 'var(--steel-pale)', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)', padding: '14px 40px', margin: '10px 0 20px', textAlign: 'center' }}>
-        <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '9px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--steel)', display: 'block', marginBottom: '2px' }}>
+      {/* Amount in words */}
+      <div style={{ 
+        background: colors.paper, 
+        borderTop: `1px solid ${colors.line}`, 
+        borderBottom: `1px solid ${colors.line}`, 
+        padding: '14px 20px', 
+        margin: '24px 32px 0 32px', 
+        textAlign: 'center' 
+      }}>
+        <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '9px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.08em', color: colors.inkSoft, display: 'block', marginBottom: '2px' }}>
           Amount in Words
         </span>
-        <span style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '15px', color: 'var(--navy)', fontWeight: '700', }}>
+        <span style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '13.5px', color: colors.ink, fontWeight: '700' }}>
           {numberToWords(grandTotal)}
         </span>
       </div>
 
-      {/* 7. PROJECT TIMELINE & STEPS (Proposal Layout Only) */}
+      {/* F. PROJECT TIMELINE */}
       {quote.format === 'proposal' && (quote.timeline_steps || []).length > 0 && (
-        <div style={{ padding: '15px 30px', textAlign: 'left' }}>
+        <div style={{ padding: '24px 32px 0 32px', textAlign: 'left' }}>
           <h2 style={sectionHeadingStyle}>
             Project Execution Timeline
           </h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '11.5px', color: 'var(--text)' }}>
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: `repeat(${Math.min((quote.timeline_steps || []).length, 4)}, 1fr)`, 
+            gap: '12px' 
+          }}>
             {(quote.timeline_steps || []).map((step, sidx) => {
               if (!step.trim()) return null;
               const hasColon = step.includes(':');
+              const title = hasColon ? step.split(':')[0] : `Step ${sidx + 1}`;
+              const desc = hasColon ? step.split(':').slice(1).join(':') : step;
               return (
-                <div key={sidx} style={{ paddingBottom: '6px', borderBottom: '1px dashed #E2E2DE', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <span style={{ color: 'var(--gold)', fontWeight: '700', fontSize: '14px', lineHeight: '1.2', userSelect: 'none' }}>•</span>
-                  <p style={{ margin: 0 }}>
-                    {hasColon ? (
-                      <>
-                        <strong>{step.split(':')[0]}:</strong>
-                        {step.split(':').slice(1).join(':')}
-                      </>
-                    ) : step}
+                <div key={sidx} style={{ 
+                  background: colors.card, 
+                  border: `1px solid ${colors.lineSoft}`, 
+                  borderRadius: '14px', 
+                  padding: '16px',
+                  boxShadow: '0 1px 2px rgba(18,33,63,0.02)'
+                }}>
+                  <span style={{ 
+                    fontSize: '9px', 
+                    fontWeight: '700', 
+                    color: colors.gold, 
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                    display: 'block',
+                    marginBottom: '4px'
+                  }}>
+                    {title}
+                  </span>
+                  <p style={{ fontSize: '11px', color: colors.inkSoft, margin: 0, lineHeight: 1.4 }}>
+                    {desc}
                   </p>
                 </div>
               );
@@ -443,15 +581,14 @@ export default function DocumentPreview({ quote, settings }) {
         </div>
       )}
 
-      {/* 8. PAYMENT SCHEDULE (3 Column premium Card Grid - borderRadius 0px) */}
+      {/* G. TERMS OF PARTNERSHIP */}
       {(quote.payment_schedule || []).length > 0 && (
-        <div style={{ padding: '15px 30px', textAlign: 'left' }}>
+        <div style={{ padding: '24px 32px 0 32px', textAlign: 'left' }}>
           <h2 style={sectionHeadingStyle}>
             {quote.format === 'proposal' ? 'Terms of Partnership' : 'Payment Schedule'}
           </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
             {(quote.payment_schedule || []).slice(0, 3).map((ms, idx) => {
-              const borderColors = ['var(--navy)', 'var(--steel)', 'var(--gold)'];
               const pctValue = parseFloat(ms.pct) || 0;
               const milestoneAmount = grandTotal * (pctValue / 100);
 
@@ -459,37 +596,41 @@ export default function DocumentPreview({ quote, settings }) {
                 <div 
                   key={idx} 
                   style={{ 
-                    background: 'var(--white)', 
-                    border: '1px solid var(--border)', 
-                    borderRadius: '0px', 
+                    background: colors.card, 
+                    border: `1px solid ${colors.lineSoft}`, 
+                    borderRadius: '14px', 
                     overflow: 'hidden', 
                     display: 'flex', 
                     flexDirection: 'column',
                     justifyContent: 'space-between',
-                    boxShadow: '0 2px 6px rgba(0,0,0,0.02)'
+                    boxShadow: '0 1px 2px rgba(18,33,63,0.02)'
                   }}
                 >
-                  <div style={{ padding: '14px' }}>
-                    <span style={{ fontSize: '8px', fontWeight: '700', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                  <div style={{ padding: '16px' }}>
+                    <span style={{ fontSize: '9px', fontWeight: '700', color: colors.gold, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                       Milestone {idx + 1}
                     </span>
-                    <div style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '38px', fontWeight: '700', color: 'var(--navy)', lineHeight: 1.1, margin: '4px 0' }}>
-                      {ms.pct}<span style={{ fontSize: '18px', fontWeight: '600' }}>%</span>
+                    <div style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '32px', fontWeight: '800', color: colors.ink, lineHeight: 1.1, margin: '6px 0' }}>
+                      {ms.pct}<span style={{ fontSize: '16px', fontWeight: '600' }}>%</span>
                     </div>
-                    <p style={{ fontSize: '11px', color: 'var(--text)', lineHeight: '1.4', minHeight: '36px' }}>
+                    <p style={{ fontSize: '11px', color: colors.inkSoft, lineHeight: '1.4', margin: 0, minHeight: '36px' }}>
                       {ms.milestone}
                     </p>
                   </div>
                   
-                  <div style={{ padding: '8px 14px', background: 'var(--steel-pale)', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '8px', color: 'var(--muted)', textTransform: 'uppercase' }}>Est. Amount</span>
-                    <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '11.5px', fontWeight: '700', color: 'var(--navy)' }}>
+                  <div style={{ 
+                    padding: '10px 16px', 
+                    background: colors.paper, 
+                    borderTop: `1px solid ${colors.lineSoft}`, 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center' 
+                  }}>
+                    <span style={{ fontSize: '8.5px', color: colors.inkSoft, textTransform: 'uppercase', fontWeight: '600' }}>Amount</span>
+                    <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '11.5px', fontWeight: '700', color: colors.ink }}>
                       ₹{Math.round(milestoneAmount).toLocaleString('en-IN')}
                     </span>
                   </div>
-
-                  {/* Bottom Color Indicator Bar */}
-                  <div style={{ height: '4px', background: borderColors[idx] }}></div>
                 </div>
               );
             })}
@@ -497,27 +638,32 @@ export default function DocumentPreview({ quote, settings }) {
         </div>
       )}
 
-      {/* 9. NOTES & T&C (2 Column grid) */}
-      <div style={{ padding: '15px 30px', textAlign: 'left' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px' }}>
+      {/* H. CARE NOTES & TERMS AND CONDITIONS */}
+      <div style={{ padding: '24px 32px 0 32px', textAlign: 'left' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
           
-          {/* Notes column */}
-          <div>
-            <h3 style={sectionHeadingStyle}>
+          {/* Notes Card */}
+          <div style={{ 
+            background: colors.card, 
+            borderRadius: '14px', 
+            border: `1px solid ${colors.lineSoft}`, 
+            padding: '20px' 
+          }}>
+            <h3 style={{ ...sectionHeadingStyle, fontSize: '12px', borderLeftWidth: '3px', paddingLeft: '8px', marginBottom: '12px' }}>
               Care Notes &amp; Scope Inclusions
             </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               {(quote.notes || []).map((note, idx) => {
                 const hasColon = note.includes(':');
                 return (
-                  <div key={idx} style={{ fontSize: '11px', paddingBottom: '6px', borderBottom: '1px solid #E6E5E0' }}>
+                  <div key={idx} style={{ fontSize: '11px', paddingBottom: '6px', borderBottom: `1px solid ${colors.lineSoft}` }}>
                     {hasColon ? (
                       <>
-                        <strong style={{ display: 'block', color: 'var(--navy)', marginBottom: '2px' }}>{note.split(':')[0]}</strong>
-                        <span style={{ color: 'var(--muted)' }}>{note.split(':').slice(1).join(':')}</span>
+                        <strong style={{ display: 'block', color: colors.ink, marginBottom: '2px' }}>{note.split(':')[0]}</strong>
+                        <span style={{ color: colors.inkSoft }}>{note.split(':').slice(1).join(':')}</span>
                       </>
                     ) : (
-                      <span style={{ color: 'var(--text)' }}>{note}</span>
+                      <span style={{ color: colors.ink }}>{note}</span>
                     )}
                   </div>
                 );
@@ -525,23 +671,28 @@ export default function DocumentPreview({ quote, settings }) {
             </div>
           </div>
 
-          {/* Terms column */}
-          <div>
-            <h3 style={sectionHeadingStyle}>
+          {/* Terms Card */}
+          <div style={{ 
+            background: colors.card, 
+            borderRadius: '14px', 
+            border: `1px solid ${colors.lineSoft}`, 
+            padding: '20px' 
+          }}>
+            <h3 style={{ ...sectionHeadingStyle, fontSize: '12px', borderLeftWidth: '3px', paddingLeft: '8px', marginBottom: '12px' }}>
               Terms &amp; Conditions
             </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               {(quote.terms || []).map((term, idx) => {
                 const hasColon = term.includes(':');
                 return (
-                  <div key={idx} style={{ fontSize: '11px', paddingBottom: '6px', borderBottom: '1px solid #E6E5E0' }}>
+                  <div key={idx} style={{ fontSize: '11px', paddingBottom: '6px', borderBottom: `1px solid ${colors.lineSoft}` }}>
                     {hasColon ? (
                       <>
-                        <strong style={{ display: 'block', color: 'var(--navy)', marginBottom: '2px' }}>{term.split(':')[0]}</strong>
-                        <span style={{ color: 'var(--muted)' }}>{term.split(':').slice(1).join(':')}</span>
+                        <strong style={{ display: 'block', color: colors.ink, marginBottom: '2px' }}>{term.split(':')[0]}</strong>
+                        <span style={{ color: colors.inkSoft }}>{term.split(':').slice(1).join(':')}</span>
                       </>
                     ) : (
-                      <span style={{ color: 'var(--text)' }}>{term}</span>
+                      <span style={{ color: colors.ink }}>{term}</span>
                     )}
                   </div>
                 );
@@ -552,63 +703,82 @@ export default function DocumentPreview({ quote, settings }) {
         </div>
       </div>
 
-      {/* 10. FOOTER (Light cream background, Plus Jakarta Sans + JetBrains typography) */}
-      <div className="doc-footer" style={{ background: '#FAF9F5', color: '#1A1A1A', padding: '24px 30px', marginTop: '30px', textAlign: 'left', borderTop: '4px solid #C9A96E' }}>
-        <div style={{ paddingBottom: '20px', borderBottom: '1px solid #E2E2DE' }}>
-          {/* Bank details */}
-          <div>
-            <span style={{ fontSize: '8px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.10em', color: '#C9A96E', display: 'block', marginBottom: '8px' }}>
-              Corporate Bank Beneficiary
-            </span>
-            <div style={{
-              fontFamily: 'JetBrains Mono, monospace',
-              fontSize: '10.5px',
-              color: '#1A1A1A',
-              WebkitPrintColorAdjust: 'exact',
-              printColorAdjust: 'exact',
-              lineHeight: '1.6'
-            }}>
-              <div><strong>Entity:</strong> {settings.bankDetails?.name}</div>
-              <div><strong>A/C No:</strong> {settings.bankDetails?.accountNo}</div>
-              <div><strong>IFSC:  </strong> {settings.bankDetails?.ifsc}</div>
-              <div><strong>Bank:  </strong> {settings.bankDetails?.bankName}</div>
+      {/* I. BANK DETAILS & FOOTER */}
+      <div className="doc-footer" style={{ 
+        padding: '24px 32px', 
+        marginTop: '32px',
+        textAlign: 'left'
+      }}>
+        {/* Navy Bank Card */}
+        <div style={{ 
+          background: colors.navyDeep, 
+          borderRadius: '14px', 
+          padding: '24px',
+          color: '#FFFFFF',
+          marginBottom: '20px'
+        }}>
+          <span style={{ fontSize: '9px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.10em', color: colors.goldSoft, display: 'block', marginBottom: '12px' }}>
+            Corporate Bank Beneficiary
+          </span>
+          <div style={{
+            fontFamily: 'JetBrains Mono, monospace',
+            fontSize: '11px',
+            lineHeight: '1.8'
+          }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '150px 1fr' }}>
+              <span style={{ color: colors.goldSoft }}>Beneficiary Name</span>
+              <span>: {settings.bankDetails?.name || 'MEAVEN DESIGNS PRIVATE LIMITED'}</span>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '150px 1fr' }}>
+              <span style={{ color: colors.goldSoft }}>Account No.</span>
+              <span>: {settings.bankDetails?.accountNo || '50200097556307'}</span>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '150px 1fr' }}>
+              <span style={{ color: colors.goldSoft }}>IFSC</span>
+              <span>: {settings.bankDetails?.ifsc || 'HDFC0001756'}</span>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '150px 1fr' }}>
+              <span style={{ color: colors.goldSoft }}>Bank</span>
+              <span>: {settings.bankDetails?.bankName || 'HDFC Bank, Marathahalli'}</span>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '150px 1fr' }}>
+              <span style={{ color: colors.goldSoft }}>GSTIN</span>
+              <span>: {settings.bankDetails?.gstin || '29AAMCM4939R2ZA'}</span>
             </div>
           </div>
         </div>
 
-        {/* Corporate Address & GSTIN footer strip */}
+        {/* Corporate Address strip */}
         <div style={{
           display: 'flex',
           justifyContent: 'space-between',
-          fontSize: '9px',
-          color: '#444444',
-          paddingTop: '12px',
+          fontSize: '9.5px',
+          color: colors.inkSoft,
+          paddingTop: '16px',
           fontFamily: 'JetBrains Mono, monospace',
-          borderTop: '1px solid #E2E2DE'
+          borderTop: `1px solid ${colors.line}`
         }}>
-          <span>GSTIN: {settings.bankDetails?.gstin} · {settings.bankDetails?.address}</span>
+          <span>GSTIN: {settings.bankDetails?.gstin || '29AAMCM4939R2ZA'} · {settings.bankDetails?.address || 'Bangalore'}</span>
         </div>
 
-        {/* System generated note — replaces signature */}
+        {/* System generated note */}
         <div style={{
           textAlign: 'center',
           paddingTop: '16px',
-          borderTop: '1px solid #E2E2DE',
+          borderTop: `1px solid ${colors.line}`,
           marginTop: '16px'
         }}>
           <p style={{
             fontFamily: 'Inter, sans-serif',
             fontSize: '9px',
-            color: '#666666',
+            color: colors.inkSoft,
             letterSpacing: '0.04em',
-            fontStyle: 'normal',
             margin: 0
           }}>
-            This is a system generated document and does not require a seal or signature.
+            Note: This is a system generated quote and doesn't need a signature.
           </p>
         </div>
       </div>
-
     </div>
   );
 }
