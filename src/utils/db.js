@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 
-const SETTINGS_VERSION = 4;
+const SETTINGS_VERSION = 5;
 
 // Default settings object
 const DEFAULT_SETTINGS = {
@@ -10,8 +10,8 @@ const DEFAULT_SETTINGS = {
   anthropicApiKey: '',
   xaiApiKey: '',
   selectedModel: 'gemini-2.5-flash',
-  supabaseUrl: '',
-  supabaseAnonKey: '',
+  supabaseUrl: 'https://xleyhzqnuptxndzdqrae.supabase.co',
+  supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsZXloenFudXB0eG5kemRxcmFlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxNjM3MTMsImV4cCI6MjA5ODczOTcxM30.v8PGnenU6ND5dwAzPekcroRS9HXKMlP2YHKn8DkmIJE',
   companyLogo: null, // Base64 image
   bankDetails: {
     name: 'MEAVEN DESIGNS PRIVATE LIMITED',
@@ -104,6 +104,9 @@ export function getSettings() {
       // Override notes and terms to new clean defaults
       parsed.notes = [...DEFAULT_SETTINGS.notes];
       parsed.terms = [...DEFAULT_SETTINGS.terms];
+      // Force update Supabase credentials on version upgrade to 5
+      parsed.supabaseUrl = DEFAULT_SETTINGS.supabaseUrl;
+      parsed.supabaseAnonKey = DEFAULT_SETTINGS.supabaseAnonKey;
       localStorage.setItem('meaven_settings', JSON.stringify(parsed));
     }
     // Filter out any "attached images" references permanently
