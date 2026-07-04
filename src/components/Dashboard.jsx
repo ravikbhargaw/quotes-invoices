@@ -135,95 +135,231 @@ export default function Dashboard({
         </div>
       ) : (
         <div className="history-list mt-4">
-          {filteredQuotes.map((q) => (
-            <div 
-              key={q.id} 
-              className="quote-card bg-white border border-slate-100 rounded-2xl p-5 shadow-[0_2px_8px_rgba(0,0,0,0.02)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.04)] hover:-translate-y-0.5 transition-all duration-200 text-left"
-            >
-              {/* Header Row: Quote Number & Status */}
-              <div className="flex items-center justify-between mb-4">
-                <span className="font-outfit text-sm font-extrabold text-slate-800 tracking-tight">
-                  {q.quote_number}
-                </span>
-                <span 
-                  onClick={() => onToggleStatus && onToggleStatus(q)}
-                  className={`text-[8.5px] px-2.5 py-0.5 rounded-full border font-bold uppercase tracking-wider transition-colors select-none ${getStatusStyle(q.status)}`}
-                  title="Click to toggle status"
-                >
-                  {q.status}
-                </span>
-              </div>
+          {filteredQuotes.map((q) => {
+            // Safe date formatter to produce "DD MMM YYYY" (e.g. "04 Jul 2026")
+            const formatDate = (dateStr) => {
+              if (!dateStr) return 'No Date';
+              const parsed = new Date(dateStr);
+              if (isNaN(parsed.getTime())) return dateStr;
+              const day = String(parsed.getDate()).padStart(2, '0');
+              const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+              const month = months[parsed.getMonth()];
+              const year = parsed.getFullYear();
+              return `${day} ${month} ${year}`;
+            };
 
-              {/* Customer Details section */}
-              <div className="mb-4">
-                <span className="text-[9px] text-slate-400 font-bold uppercase tracking-widest block mb-0.5">
-                  Customer Name
-                </span>
-                <h3 className="text-[13px] font-bold text-slate-800 font-sans leading-snug truncate">
-                  {q.client_name || 'Unnamed Client'}
-                </h3>
-                <div className="flex items-center gap-1.5 mt-1">
-                  <span className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">
-                    Date Created:
-                  </span>
-                  <span className="text-[10.5px] text-slate-600 font-medium font-sans">
-                    {q.date || 'No Date'}
-                  </span>
-                </div>
-              </div>
+            return (
+              <div 
+                key={q.id} 
+                className="quote-log-card"
+                style={{
+                  background: 'linear-gradient(180deg, #FFFFFF 0%, #FFFDF9 100%)',
+                  border: '1px solid #EAE5D8',
+                  borderRadius: '16px',
+                  padding: '16px 18px 14px',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  boxShadow: '0 1px 1px rgba(18,33,63,0.03), 0 4px 10px rgba(18,33,63,0.04), 0 16px 32px -14px rgba(18,33,63,0.14)',
+                  textAlign: 'left'
+                }}
+              >
+                {/* Top Accent Bar */}
+                <div style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: '3px',
+                  background: 'linear-gradient(90deg, #0D1B33 0%, #B98A2E 55%, #E9D6A6 100%)'
+                }} />
 
-              {/* Financial Box: Premium background container for values */}
-              <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 grid grid-cols-2 gap-3 mb-4">
-                <div>
-                  <span className="text-[9px] text-slate-400 font-bold uppercase tracking-widest block mb-0.5">
-                    Value (EX GST)
+                {/* Row 1 — Quote ID + status pill */}
+                <div className="flex justify-between items-center" style={{ marginBottom: '11px' }}>
+                  <span style={{
+                    fontFamily: 'Plus Jakarta Sans, sans-serif',
+                    fontWeight: 700,
+                    fontSize: '13.5px',
+                    color: '#12213F',
+                    letterSpacing: '0.6px',
+                    fontVariantNumeric: 'tabular-nums'
+                  }}>
+                    {q.quote_number}
                   </span>
-                  <span className="font-mono text-[11.5px] text-slate-700 font-bold">
-                    ₹{Math.round(parseFloat(q.subtotal) || 0).toLocaleString('en-IN')}
-                  </span>
+                  
+                  {/* Status Pill */}
+                  <div className="flex items-center" style={{
+                    border: '1px solid #E4D2A0',
+                    background: 'transparent',
+                    borderRadius: '100px',
+                    padding: '3px 9px 3px 7px',
+                    gap: '5px',
+                    cursor: 'pointer'
+                  }} onClick={() => onToggleStatus && onToggleStatus(q)}>
+                    <div style={{
+                      width: '5px',
+                      height: '5px',
+                      borderRadius: '50%',
+                      background: '#B98A2E',
+                      boxShadow: '0 0 0 3px rgba(185,138,46,0.15)'
+                    }} />
+                    <span style={{
+                      fontSize: '9.5px',
+                      fontWeight: 700,
+                      letterSpacing: '0.8px',
+                      textTransform: 'uppercase',
+                      color: '#8A6417'
+                    }}>
+                      {q.status}
+                    </span>
+                  </div>
                 </div>
-                <div className="text-right border-l border-slate-200/60 pl-3">
-                  <span className="text-[9px] text-slate-400 font-bold uppercase tracking-widest block mb-0.5">
-                    Grand (Inc. GST)
-                  </span>
-                  <span className="font-mono text-xs text-[var(--ui-accent, #B8933E)] font-extrabold">
-                    ₹{Math.round(parseFloat(q.total) || 0).toLocaleString('en-IN')}
-                  </span>
-                </div>
-              </div>
 
-              {/* Action Buttons Row */}
-              <div className="flex items-center gap-2 border-t border-slate-100 pt-3.5">
-                <button 
-                  onClick={() => onEditQuote(q)}
-                  className="flex-1 flex items-center justify-center gap-1.5 bg-slate-900 text-white hover:bg-slate-800 py-2 px-3 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-colors shadow-sm"
-                  title="Load & Edit Quote"
-                >
-                  <Edit3 size={11} /> Load
-                </button>
-                
-                <button 
-                  onClick={() => onDuplicateQuote(q)}
-                  className="flex-1 flex items-center justify-center gap-1.5 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 py-2 px-3 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-colors"
-                  title="Duplicate Quote"
-                >
-                  <Copy size={11} /> Duplicate
-                </button>
-                
-                {isAdmin && (
+                {/* Row 2 — Customer name + date */}
+                <div className="flex justify-between items-baseline" style={{ gap: '10px', marginBottom: '12px' }}>
+                  <h3 style={{
+                    fontFamily: 'Plus Jakarta Sans, sans-serif',
+                    fontWeight: 700,
+                    fontSize: '15.5px',
+                    color: '#12213F',
+                    letterSpacing: '-0.1px',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    margin: 0
+                  }}>
+                    {q.client_name || 'Unnamed Client'}
+                  </h3>
+                  <div style={{
+                    fontSize: '11px',
+                    whiteSpace: 'nowrap',
+                    flexShrink: 0
+                  }}>
+                    <span style={{ color: '#767F9C', fontWeight: 400 }}>Created </span>
+                    <span style={{ color: '#12213F', fontWeight: 600 }}>{formatDate(q.date)}</span>
+                  </div>
+                </div>
+
+                {/* Divider */}
+                <div style={{
+                  height: '1px',
+                  background: 'linear-gradient(90deg, transparent, #EAE5D8 15%, #EAE5D8 85%, transparent)',
+                  margin: '0 0 12px 0'
+                }} />
+
+                {/* Row 3 — Values */}
+                <div className="flex justify-between items-end" style={{ marginBottom: '12px' }}>
+                  {/* Left Block */}
+                  <div className="flex flex-col items-start">
+                    <span style={{
+                      fontSize: '9px',
+                      letterSpacing: '0.8px',
+                      textTransform: 'uppercase',
+                      fontWeight: 600,
+                      color: '#767F9C',
+                      marginBottom: '2px'
+                    }}>
+                      Value Ex. GST
+                    </span>
+                    <span style={{
+                      fontFamily: 'Plus Jakarta Sans, sans-serif',
+                      fontWeight: 700,
+                      fontSize: '14px',
+                      color: '#A6ACC0',
+                      fontVariantNumeric: 'tabular-nums'
+                    }}>
+                      ₹{Math.round(parseFloat(q.subtotal) || 0).toLocaleString('en-IN')}
+                    </span>
+                  </div>
+
+                  {/* Right Block */}
+                  <div className="flex flex-col items-end" style={{ textAlign: 'right' }}>
+                    <span style={{
+                      fontSize: '9px',
+                      letterSpacing: '0.8px',
+                      textTransform: 'uppercase',
+                      fontWeight: 600,
+                      color: '#8A6417',
+                      marginBottom: '2px'
+                    }}>
+                      Grand Inc. GST
+                    </span>
+                    <div className="flex flex-col items-end">
+                      <span style={{
+                        fontFamily: 'Plus Jakarta Sans, sans-serif',
+                        fontWeight: 800,
+                        fontSize: '19px',
+                        color: '#0D1B33',
+                        letterSpacing: '-0.2px',
+                        fontVariantNumeric: 'tabular-nums',
+                        lineHeight: 1.1
+                      }}>
+                        ₹{Math.round(parseFloat(q.total) || 0).toLocaleString('en-IN')}
+                      </span>
+                      <div style={{
+                        height: '2px',
+                        marginTop: '3px',
+                        width: '100%',
+                        background: 'linear-gradient(90deg, transparent, #B98A2E 60%, #B98A2E)',
+                        borderRadius: '2px'
+                      }} />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Row 4 — Action bar */}
+                <div className="flex" style={{
+                  border: '1px solid #EAE5D8',
+                  borderRadius: '10px',
+                  overflow: 'hidden'
+                }}>
                   <button 
-                    onClick={() => onDeleteQuote(q.id)}
-                    className="flex-none flex items-center justify-center bg-rose-50 border border-rose-100 text-rose-600 hover:bg-rose-100 hover:text-rose-700 p-2 rounded-xl transition-colors"
-                    title="Delete Quote"
-                    style={{ width: '32px', height: '32px' }}
+                    onClick={() => onEditQuote(q)}
+                    className="flex-grow flex-1 flex items-center justify-center gap-[6px] py-[7px] text-[#12213F] bg-transparent border-r border-[#EAE5D8] hover:bg-[#FBF6EA] hover:text-[#8A6417] transition-colors cursor-pointer outline-none"
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 600,
+                      fontSize: '11.5px',
+                      borderTop: 'none',
+                      borderLeft: 'none',
+                      borderBottom: 'none'
+                    }}
+                    title="Load & Edit Quote"
                   >
-                    <Trash2 size={13} />
+                    <Edit3 size={13} strokeWidth={2} stroke="currentColor" /> Load
                   </button>
-                )}
-              </div>
 
-            </div>
-          ))}
+                  <button 
+                    onClick={() => onDuplicateQuote(q)}
+                    className="flex-grow flex-1 flex items-center justify-center gap-[6px] py-[7px] text-[#12213F] bg-transparent hover:bg-[#FBF6EA] hover:text-[#8A6417] transition-colors cursor-pointer outline-none"
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 600,
+                      fontSize: '11.5px',
+                      borderTop: 'none',
+                      borderLeft: 'none',
+                      borderBottom: 'none',
+                      borderRight: isAdmin ? '1px solid #EAE5D8' : 'none'
+                    }}
+                    title="Duplicate Quote"
+                  >
+                    <Copy size={13} strokeWidth={2} stroke="currentColor" /> Duplicate
+                  </button>
+
+                  {isAdmin && (
+                    <button 
+                      onClick={() => onDeleteQuote(q.id)}
+                      className="w-10 flex-none flex items-center justify-center text-[#9C8A78] bg-transparent hover:bg-[#FBF1EE] hover:text-[#B4483A] transition-colors cursor-pointer border-none outline-none"
+                      style={{ height: '29px' }}
+                      title="Delete Quote"
+                    >
+                      <Trash2 size={13} strokeWidth={2} stroke="currentColor" />
+                    </button>
+                  )}
+                </div>
+
+              </div>
+            );
+          })}
         </div>
       )}
 
