@@ -1578,29 +1578,23 @@ Quote:
             </div>
           )}
 
-          {dbConnected ? (
-            <div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg border border-emerald-100" title="Supabase Connected">
-              <Database size={16} />
-            </div>
-          ) : (
-            <div className="p-2 bg-zinc-100 text-zinc-400 rounded-lg border border-zinc-200" title="Local Storage Mode">
-              <Database size={16} />
-            </div>
-          )}
-
-          <span 
-            className="text-[9px] font-bold text-zinc-400 tracking-wider"
+          <div 
             style={{
               position: 'absolute',
               bottom: '10px',
               left: '50%',
               transform: 'translateX(-50%)',
-              pointerEvents: 'none',
-              opacity: 0.6
+              display: 'flex',
+              alignItems: 'center',
+              gap: '5px',
+              pointerEvents: 'auto',
+              opacity: 0.8
             }}
+            title={dbConnected ? "Supabase Connected" : "Local Storage Mode"}
           >
-            v2.0
-          </span>
+            <Database size={11} style={{ color: dbConnected ? '#10B981' : '#9CA3AF' }} />
+            <span className="text-[9px] font-bold text-zinc-500 tracking-wider">v2.0</span>
+          </div>
         </div>
       </div>
       )}
