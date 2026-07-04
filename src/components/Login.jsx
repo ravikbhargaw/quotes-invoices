@@ -82,23 +82,20 @@ export default function Login({ onLoginSuccess }) {
         }} />
 
         {/* Brand Header */}
-        <div style={{ marginBottom: '32px' }}>
-          <div style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '8px',
-            fontSize: '22px',
-            fontWeight: '800',
-            color: '#1B2B45',
-            fontFamily: 'Plus Jakarta Sans, sans-serif',
-            letterSpacing: '-0.02em',
-            marginBottom: '4px'
-          }}>
-            meaven<span style={{ color: '#C9A96E' }}>.in</span>
-          </div>
+        <div style={{ marginBottom: '28px' }}>
+          <img 
+            src="/login_logo.png" 
+            alt="Meaven Logo" 
+            style={{
+              height: '50px',
+              objectFit: 'contain',
+              display: 'block',
+              margin: '0 auto 8px'
+            }}
+          />
           <p style={{
-            fontSize: '11px',
-            color: '#666',
+            fontSize: '10px',
+            color: '#6B7280',
             textTransform: 'uppercase',
             letterSpacing: '0.08em',
             margin: '0',
