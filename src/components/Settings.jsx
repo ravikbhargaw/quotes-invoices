@@ -357,7 +357,7 @@ export default function Settings({ settings, onSaveSettings, currentUserEmail })
               <p className="text-[10px] text-[var(--ui-text-muted)] mt-0.5">Configure API keys for different AI models. Click the link to get a key.</p>
             </div>
 
-            <div className="form-group">
+            <div className="form-group" style={{ marginTop: '20px', borderTop: '1px solid var(--ui-border)', paddingTop: '20px' }}>
               <div className="flex justify-between items-center mb-1.5">
                 <label className="input-label mb-0">Gemini API Key</label>
                 <a 
