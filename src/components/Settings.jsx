@@ -6,7 +6,7 @@ import {
 import { testSupabaseConnection } from '../utils/db';
 
 export default function Settings({ settings, onSaveSettings, currentUserEmail }) {
-  const [activeTab, setActiveTab] = useState('supabase'); // 'supabase', 'gemini', 'products', 'defaults'
+  const [activeTab, setActiveTab] = useState('defaults'); // 'defaults', 'gemini', 'products', 'team'
   const [localSettings, setLocalSettings] = useState({ ...settings });
 
   // Team Management states
@@ -215,7 +215,6 @@ export default function Settings({ settings, onSaveSettings, currentUserEmail })
         {[
           { key: 'defaults', label: 'Defaults' },
           { key: 'gemini', label: 'AI Key' },
-          { key: 'supabase', label: 'DB Cloud' },
           { key: 'products', label: 'Catalog' },
           ...(currentUserEmail === 'ravi.bhargaw@meaven.in' ? [{ key: 'team', label: 'Team Directory' }] : [])
         ].map((tab) => (
@@ -239,8 +238,12 @@ export default function Settings({ settings, onSaveSettings, currentUserEmail })
       </div>
 
       <div 
-        className="bg-white border border-[var(--ui-border)] rounded-xl space-y-4"
-        style={{ padding: '16px 14px', overflowY: 'auto' }}
+        className="bg-white border border-[var(--ui-border)] rounded-xl space-y-4 shadow-sm"
+        style={{ 
+          padding: '16px 14px', 
+          overflowY: 'auto',
+          maxHeight: 'calc(100vh - 220px)'
+        }}
       >
         
         {/* TAB 1: CLOUD DATABASE */}

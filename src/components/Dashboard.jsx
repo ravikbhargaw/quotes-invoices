@@ -125,14 +125,14 @@ export default function Dashboard({
 
       {/* Quotes list */}
       {filteredQuotes.length === 0 ? (
-        <div className="border border-[var(--ui-border)] border-dashed rounded-lg p-6 text-center text-xs">
+        <div className="border border-[var(--ui-border)] border-dashed rounded-lg p-6 text-center text-xs mt-4">
           <h4 className="font-semibold text-zinc-700">No Quotes Found</h4>
           <p className="text-[10px] text-[var(--ui-text-muted)] mt-1">
             Create a new quote or adjust filters to view items.
           </p>
         </div>
       ) : (
-        <div className="history-list">
+        <div className="history-list mt-4">
           {filteredQuotes.map((q) => (
             <div key={q.id} className="quote-card">
               <div className="flex items-start justify-between gap-1 mb-2">

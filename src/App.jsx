@@ -1381,11 +1381,14 @@ Quote:
       setIsDirty(false);
       loadData();
     }
+    // Force DOM update to hide headers/sidebars before browser blocks loop
+    setIsPrinting(true);
     // Show instruction overlay before print dialog
     setShowPrintTip(true);
     setTimeout(() => {
       setShowPrintTip(false);
       window.print();
+      setIsPrinting(false);
     }, 2000);
   };
 

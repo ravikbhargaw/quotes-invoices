@@ -1110,9 +1110,10 @@ body {
   }
 
   .doc-footer {
-    background: #FAF9F5 !important;
+    background: #0D1B33 !important;
     page-break-inside: avoid;
   }
+
 
   /* A4 page sizing */
   @page {
