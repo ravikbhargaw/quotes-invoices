@@ -847,37 +847,36 @@ export default function DocumentPreview({ quote, settings }) {
         borderBottomRightRadius: '12px',
         overflow: 'hidden'
       }}>
-        {/* Horizontal Bank Details Row */}
+        {/* Horizontal Bank Details Grid */}
         <div style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          justifyContent: 'center',
-          alignItems: 'center',
-          gap: '8px 18px',
-          fontFamily: 'Inter, sans-serif',
-          fontSize: '9px',
-          letterSpacing: '0.02em',
-          color: '#E9D6A6',
-          marginBottom: '10px'
+          display: 'grid',
+          gridTemplateColumns: '1.3fr 1fr 1fr 0.8fr 1fr',
+          gap: '12px',
+          width: '100%',
+          textAlign: 'center',
+          borderBottom: '1px solid rgba(233, 214, 166, 0.15)',
+          paddingBottom: '14px',
+          marginBottom: '12px'
         }}>
-          <div>
-            <strong style={{ color: '#FFFFFF' }}>BENEFICIARY:</strong> {settings.bankDetails?.name || 'MEAVEN DESIGNS PRIVATE LIMITED'}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+            <span style={{ fontSize: '7.5px', color: '#B9C2D6', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Beneficiary Name</span>
+            <span style={{ fontSize: '10px', color: '#FFFFFF', fontWeight: '600' }}>{settings.bankDetails?.name || 'MEAVEN DESIGNS PRIVATE LIMITED'}</span>
           </div>
-          <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: '#E9D6A6', opacity: 0.5 }} />
-          <div>
-            <strong style={{ color: '#FFFFFF' }}>A/C NO:</strong> {settings.bankDetails?.accountNo || '50200097556307'}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+            <span style={{ fontSize: '7.5px', color: '#B9C2D6', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Account Number</span>
+            <span style={{ fontSize: '10px', color: '#FFFFFF', fontWeight: '600', fontFamily: 'JetBrains Mono, monospace' }}>{settings.bankDetails?.accountNo || '50200097556307'}</span>
           </div>
-          <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: '#E9D6A6', opacity: 0.5 }} />
-          <div>
-            <strong style={{ color: '#FFFFFF' }}>IFSC:</strong> {settings.bankDetails?.ifsc || 'HDFC0001756'}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+            <span style={{ fontSize: '7.5px', color: '#B9C2D6', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Bank / Branch</span>
+            <span style={{ fontSize: '10px', color: '#FFFFFF', fontWeight: '600' }}>{settings.bankDetails?.bankName || 'HDFC Bank, Marathahalli'}</span>
           </div>
-          <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: '#E9D6A6', opacity: 0.5 }} />
-          <div>
-            <strong style={{ color: '#FFFFFF' }}>BANK:</strong> {settings.bankDetails?.bankName || 'HDFC Bank, Marathahalli'}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+            <span style={{ fontSize: '7.5px', color: '#B9C2D6', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>IFSC Code</span>
+            <span style={{ fontSize: '10px', color: '#E9D6A6', fontWeight: '700', fontFamily: 'JetBrains Mono, monospace' }}>{settings.bankDetails?.ifsc || 'HDFC0001756'}</span>
           </div>
-          <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: '#E9D6A6', opacity: 0.5 }} />
-          <div>
-            <strong style={{ color: '#FFFFFF' }}>GSTIN:</strong> {settings.bankDetails?.gstin || '29AAMCM4939R2ZA'}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+            <span style={{ fontSize: '7.5px', color: '#B9C2D6', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>GSTIN</span>
+            <span style={{ fontSize: '10px', color: '#E9D6A6', fontWeight: '700', fontFamily: 'JetBrains Mono, monospace' }}>{settings.bankDetails?.gstin || '29AAMCM4939R2ZA'}</span>
           </div>
         </div>
 
