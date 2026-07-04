@@ -202,6 +202,7 @@ body {
   overflow-y: auto !important;
   min-height: 0 !important;
   padding: 20px;
+  background-color: var(--ui-bg) !important;
 }
 
 /* ── FORM ELEMENTS ── */
@@ -447,12 +448,14 @@ body {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  transition: background 0.2s;
-  border-radius: 0px;
+  transition: all 0.2s ease;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(27, 43, 69, 0.15);
 }
 
 .print-btn:hover {
   background: var(--steel);
+  box-shadow: 0 6px 16px rgba(27, 43, 69, 0.25);
 }
 
 

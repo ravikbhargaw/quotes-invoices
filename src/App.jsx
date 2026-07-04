@@ -1639,17 +1639,14 @@ Quote:
                       key={preset}
                       type="button"
                       onClick={() => handleLoadPresetPrompt(getPresetId(preset))}
+                      className="btn-outline"
                       style={{
-                        fontFamily: 'Inter, sans-serif',
-                        fontSize: '11px',
-                        fontWeight: '500',
+                        borderRadius: '20px',
                         padding: '5px 12px',
-                        background: 'var(--steel-pale)',
-                        color: 'var(--steel)',
-                        border: '1px solid rgba(58,97,134,0.2)',
-                        cursor: 'pointer',
-                        whiteSpace: 'nowrap',
-                        borderRadius: '0px'
+                        fontSize: '10px',
+                        fontWeight: '600',
+                        height: 'auto',
+                        width: 'auto'
                       }}
                     >
                       {preset}
@@ -1704,33 +1701,16 @@ Quote:
                     <button
                       type="button"
                       onClick={handleLoadAIResult}
-                      style={{
-                        flex: 1,
-                        background: 'var(--navy)',
-                        color: '#fff',
-                        border: 'none',
-                        padding: '9px 0',
-                        fontFamily: 'Inter, sans-serif',
-                        fontSize: '12px',
-                        fontWeight: '600',
-                        cursor: 'pointer'
-                      }}
+                      className="btn"
+                      style={{ flex: 1, padding: '10px 0', justifyContent: 'center', width: 'auto' }}
                     >
                       Load into Form
                     </button>
                     <button
                       type="button"
                       onClick={() => setParsedAIResult(null)}
-                      style={{
-                        flex: 1,
-                        background: 'transparent',
-                        color: 'var(--muted)',
-                        border: '1px solid var(--border)',
-                        padding: '9px 0',
-                        fontFamily: 'Inter, sans-serif',
-                        fontSize: '12px',
-                        cursor: 'pointer'
-                      }}
+                      className="btn-outline"
+                      style={{ flex: 1, padding: '10px 0', justifyContent: 'center', width: 'auto' }}
                     >
                       Clear
                     </button>
@@ -1833,10 +1813,10 @@ Quote:
             
             <div className="panel-body space-y-4 sub-panel-content">
               {showFormAiPrompt && (
-                <div className="bg-zinc-50 border border-zinc-200 p-4 rounded-xl space-y-4 text-left">
-                  <div className="flex justify-between items-center mb-1">
-                    <h3 className="text-xs font-bold text-zinc-700 uppercase tracking-wider flex items-center gap-1.5" style={{ margin: 0 }}>
-                      <Sparkles size={14} className="text-[var(--ui-accent, #4F46E5)] animate-pulse" /> AI Quote Creator
+                <div className="bg-white border border-[var(--ui-border)] p-4 rounded-xl space-y-4 shadow-sm text-left">
+                  <div className="flex justify-between items-center mb-1 border-b border-zinc-150 pb-2">
+                    <h3 className="text-xs font-bold text-zinc-800 uppercase tracking-wider flex items-center gap-1.5" style={{ margin: 0, fontFamily: 'Outfit, sans-serif' }}>
+                      <Sparkles size={14} className="text-[var(--ui-accent, #B8933E)] animate-pulse" /> AI Quote Creator
                     </h3>
                     <button 
                       type="button"
@@ -1849,8 +1829,8 @@ Quote:
                   </div>
                   
                   {/* Model Selector */}
-                  <div className="form-group">
-                    <label className="input-label" style={{ fontSize: '11px', fontWeight: '600', color: 'var(--ui-text-muted)' }}>AI Engine Model</label>
+                  <div className="form-group mb-0">
+                    <label className="input-label">AI Engine Model</label>
                     <select
                       value={settings.selectedModel || 'gemini-2.5-flash'}
                       onChange={(e) => {
@@ -1883,10 +1863,10 @@ Quote:
                       </optgroup>
                     </select>
                   </div>
-
+ 
                   {/* BOQ Prompt Area */}
-                  <div className="form-group">
-                    <label className="input-label" style={{ fontSize: '11px', fontWeight: '600', color: 'var(--ui-text-muted)' }}>Describe Project / Paste BOQ Text</label>
+                  <div className="form-group mb-0">
+                    <label className="input-label">Describe Project / Paste BOQ Text</label>
                     <textarea
                       value={aiPrompt}
                       onChange={(e) => setAiPrompt(e.target.value)}
@@ -1896,65 +1876,101 @@ Quote:
                       style={{ padding: '8px 10px', width: '100%', border: '1px solid var(--border)' }}
                     />
                   </div>
-
+ 
                   {/* Preset helpers */}
-                  <div className="space-y-1.5">
-                    <span className="text-[9px] uppercase font-bold text-zinc-400 block tracking-wider">Example Presets</span>
+                  <div style={{ marginTop: '12px' }}>
+                    <span className="text-[9px] uppercase font-bold text-zinc-400 block tracking-wider mb-2">Example Presets</span>
                     <div className="flex flex-wrap gap-1.5">
                       <button
                         type="button"
                         onClick={() => handleLoadPresetPrompt(1)}
-                        className="px-2 py-1 bg-white hover:bg-zinc-100 border border-zinc-200 rounded text-[10px] text-zinc-650 transition-colors cursor-pointer"
+                        className="btn-outline"
+                        style={{
+                          borderRadius: '20px',
+                          padding: '5px 12px',
+                          fontSize: '10px',
+                          fontWeight: '600',
+                          height: 'auto',
+                          width: 'auto'
+                        }}
                       >
                         Minimalist Partition
                       </button>
                       <button
                         type="button"
                         onClick={() => handleLoadPresetPrompt(2)}
-                        className="px-2 py-1 bg-white hover:bg-zinc-100 border border-zinc-200 rounded text-[10px] text-zinc-650 transition-colors cursor-pointer"
+                        className="btn-outline"
+                        style={{
+                          borderRadius: '20px',
+                          padding: '5px 12px',
+                          fontSize: '10px',
+                          fontWeight: '600',
+                          height: 'auto',
+                          width: 'auto'
+                        }}
                       >
                         Shower Enclosures
                       </button>
                       <button
                         type="button"
                         onClick={() => handleLoadPresetPrompt(3)}
-                        className="px-2 py-1 bg-white hover:bg-zinc-100 border border-zinc-200 rounded text-[10px] text-zinc-650 transition-colors cursor-pointer"
+                        className="btn-outline"
+                        style={{
+                          borderRadius: '20px',
+                          padding: '5px 12px',
+                          fontSize: '10px',
+                          fontWeight: '600',
+                          height: 'auto',
+                          width: 'auto'
+                        }}
                       >
                         Frameless Doors
                       </button>
                       <button
                         type="button"
                         onClick={() => handleLoadPresetPrompt(4)}
-                        className="px-2 py-1 bg-white hover:bg-zinc-100 border border-zinc-200 rounded text-[10px] text-zinc-650 transition-colors cursor-pointer"
+                        className="btn-outline"
+                        style={{
+                          borderRadius: '20px',
+                          padding: '5px 12px',
+                          fontSize: '10px',
+                          fontWeight: '600',
+                          height: 'auto',
+                          width: 'auto'
+                        }}
                       >
                         Glass Pergola
                       </button>
                     </div>
                   </div>
-
+ 
                   {/* Actions */}
                   <div className="flex gap-2 pt-2">
                     <button
                       type="button"
-                      onClick={handleGenerateAIForForm}
-                      disabled={loadingFormAI}
-                      className="flex-1 py-2 text-white text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 shadow-md"
+                      onClick={() => setShowFormAiPrompt(false)}
+                      className="btn-outline flex-1"
                       style={{
-                        backgroundColor: 'var(--ui-accent, #4F46E5)',
-                        border: 'none',
-                        cursor: loadingFormAI ? 'not-allowed' : 'pointer',
-                        opacity: loadingFormAI ? 0.7 : 1
+                        justifyContent: 'center',
+                        padding: '10px 0'
                       }}
                     >
-                      <Sparkles size={13} />
-                      {loadingFormAI ? 'AI is processing BOQ...' : 'Generate Form Data'}
+                      Cancel
                     </button>
                     <button
                       type="button"
-                      onClick={() => setShowFormAiPrompt(false)}
-                      className="px-4 py-2 border border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-650 text-xs font-bold rounded-lg transition-colors cursor-pointer"
+                      onClick={handleGenerateAIForForm}
+                      disabled={loadingFormAI}
+                      className="btn flex-1"
+                      style={{
+                        width: 'auto',
+                        justifyContent: 'center',
+                        padding: '10px 0',
+                        cursor: loadingFormAI ? 'not-allowed' : 'pointer'
+                      }}
                     >
-                      Cancel
+                      <Sparkles size={13} />
+                      {loadingFormAI ? 'AI is processing...' : 'Generate Form'}
                     </button>
                   </div>
                 </div>
@@ -2099,7 +2115,15 @@ Quote:
                     type="button"
                     onClick={handleGenerateSummary}
                     disabled={generatingSummary}
-                    className="px-2.5 py-0.5 rounded-full text-[10px] bg-indigo-50 border border-indigo-100 text-[var(--ui-accent, #B8933E)] hover:bg-indigo-100 transition-colors font-bold flex items-center gap-1 cursor-pointer"
+                    className="btn-outline"
+                    style={{
+                      borderRadius: '20px',
+                      padding: '4px 10.5px',
+                      fontSize: '10px',
+                      fontWeight: '700',
+                      height: 'auto',
+                      width: 'auto'
+                    }}
                   >
                     {generatingSummary ? 'Generating...' : '✨ AI Generate'}
                   </button>
@@ -2129,7 +2153,7 @@ Quote:
                 </div>
  
                 {/* Predefined select catalog shortcut */}
-                <div className="bg-[var(--ui-card)] border border-[var(--ui-border)] p-2.5 rounded-lg mb-3 flex gap-2 items-center">
+                <div className="bg-white border border-[var(--ui-border)] p-2.5 rounded-xl mb-3 flex gap-2 items-center shadow-sm">
                   <select
                     id="catalogSelector"
                     className="input-field cursor-pointer py-1 text-xs"
@@ -2146,11 +2170,12 @@ Quote:
                       const product = settings.predefinedProducts[idx];
                       if (product) handleAddItem(product);
                     }}
-                    className="px-3 py-1.5 text-white text-xs font-semibold rounded shrink-0 transition-colors cursor-pointer flex items-center justify-center"
+                    className="btn"
                     style={{
                       height: '32px',
-                      backgroundColor: 'var(--ui-accent, #4F46E5)',
-                      border: 'none'
+                      width: 'auto',
+                      padding: '0 14px',
+                      whiteSpace: 'nowrap'
                     }}
                   >
                     + Add
