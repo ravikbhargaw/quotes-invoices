@@ -63,7 +63,7 @@ export default function Clients({ clients, onSaveClient, onDeleteClient, isAdmin
           </span>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-3">
+        <form onSubmit={handleSubmit} className="bg-white border border-[var(--ui-border)] p-4 rounded-xl space-y-3.5 shadow-sm">
           <div className="form-group">
             <label className="input-label">Client Name *</label>
             <input 
@@ -158,7 +158,7 @@ export default function Clients({ clients, onSaveClient, onDeleteClient, isAdmin
     >
       
       {/* Search & Actions Bar */}
-      <div className="bg-[var(--ui-card)] border border-[var(--ui-border)] p-3 rounded-lg space-y-2">
+      <div className="bg-white border border-[var(--ui-border)] p-4 rounded-xl space-y-3 shadow-sm">
         <div className="relative">
           <Search className="absolute left-2.5 top-2.5 text-[var(--ui-text-muted)]" size={14} />
           <input 

@@ -950,9 +950,9 @@ body {
 }
 
 .quote-card {
-  background: var(--ui-card) !important;
+  background: #FFFFFF !important;
   border: 1px solid var(--ui-border) !important;
-  border-radius: 8px !important;
+  border-radius: 12px !important;
   padding: 14px !important;
   transition: all 0.2s ease-in-out !important;
   display: flex !important;
@@ -960,11 +960,12 @@ body {
   gap: 10px !important;
   text-align: left !important;
   cursor: default !important;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.02), 0 1px 2px rgba(0,0,0,0.01) !important;
 }
 
 .quote-card:hover {
   border-color: var(--ui-accent) !important;
-  box-shadow: 0 4px 14px rgba(184, 151, 90, 0.08) !important;
+  box-shadow: 0 4px 14px rgba(184, 151, 90, 0.08), 0 2px 4px rgba(0,0,0,0.02) !important;
 }
 
 /* Scroll container for Left active sub-panels */

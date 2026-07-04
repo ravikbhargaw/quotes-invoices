@@ -70,15 +70,15 @@ export default function Dashboard({
     <div className="space-y-4 animate-fade-in no-print">
       
       {/* Quick Summary Row */}
-      <div className="grid grid-cols-2 gap-2 bg-[var(--ui-card)] border border-[var(--ui-border)] p-3 rounded-lg text-xs">
+      <div className="grid grid-cols-2 gap-2 bg-white border border-[var(--ui-border)] p-4 rounded-xl text-xs shadow-sm">
         <div>
-          <span className="text-[9px] text-[var(--ui-text-muted)] uppercase block font-semibold">Finalised Projects</span>
-          <strong className="text-md font-outfit text-[var(--ui-accent)]">
+          <span className="text-[9px] text-[var(--ui-text-muted)] uppercase block font-bold tracking-wider">Finalised Projects</span>
+          <strong className="text-md font-outfit text-[var(--ui-accent, #B8933E)]">
             {stats.finalised} / {stats.total}
           </strong>
         </div>
         <div className="text-right">
-          <span className="text-[9px] text-[var(--ui-text-muted)] uppercase block font-semibold">Revenue Secured</span>
+          <span className="text-[9px] text-[var(--ui-text-muted)] uppercase block font-bold tracking-wider">Revenue Secured</span>
           <strong className="text-md font-mono text-zinc-800">
             ₹{stats.finalisedRevenue.toLocaleString('en-IN')}
           </strong>
@@ -86,7 +86,7 @@ export default function Dashboard({
       </div>
 
       {/* Filters Bar (Side-by-side for Sidebar) */}
-      <div className="bg-[var(--ui-card)] border border-[var(--ui-border)] p-3 rounded-lg space-y-2">
+      <div className="bg-white border border-[var(--ui-border)] p-4 rounded-xl space-y-3 shadow-sm">
         <div className="grid grid-cols-2 gap-2">
           <div className="relative">
             <Search className="absolute left-2.5 top-2.5 text-[var(--ui-text-muted)]" size={14} />

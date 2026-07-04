@@ -1510,7 +1510,7 @@ Quote:
       
       {/* 1. FAR-LEFT VERTICAL NAVIGATION ICON BAR */}
       {!isPrinting && (
-        <div className="sidebar-nav no-print">
+        <div className="sidebar-nav no-print" style={{ position: 'relative' }}>
         {/* Tab Switchers (AI is first) */}
         <div 
           onClick={() => navigateToTab('ai')}
@@ -1588,7 +1588,19 @@ Quote:
             </div>
           )}
 
-          <span className="text-[9px] font-bold text-[var(--ui-accent)] tracking-wider">v2.0</span>
+          <span 
+            className="text-[9px] font-bold text-zinc-400 tracking-wider"
+            style={{
+              position: 'absolute',
+              bottom: '10px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              pointerEvents: 'none',
+              opacity: 0.6
+            }}
+          >
+            v2.0
+          </span>
         </div>
       </div>
       )}
@@ -1726,62 +1738,70 @@ Quote:
                 </div>
               )}
 
-              {/* Active Model / Provider Selection */}
-              <div className="form-group">
-                <label className="input-label">AI Engine Model</label>
-                <select
-                  value={settings.selectedModel || 'gemini-2.5-flash'}
-                  onChange={(e) => {
-                    const updated = { ...settings, selectedModel: e.target.value };
-                    saveSettings(updated);
-                    setSettings(updated);
-                  }}
-                  className="input-field cursor-pointer"
-                  style={{ padding: '6px 10px', fontSize: '12px' }}
+              {/* Card Container for AI Assistant Inputs */}
+              <div className="bg-white border border-[var(--ui-border)] p-4 rounded-xl space-y-4 shadow-sm text-left">
+                <div className="flex items-center gap-1.5 border-b border-zinc-150 pb-2 mb-1">
+                  <span className="text-[10px] font-extrabold text-[var(--ui-accent, #B8933E)] uppercase tracking-wider">AI Quote Parameters</span>
+                </div>
+
+                {/* Active Model / Provider Selection */}
+                <div className="form-group mb-0">
+                  <label className="input-label">AI Engine Model</label>
+                  <select
+                    value={settings.selectedModel || 'gemini-2.5-flash'}
+                    onChange={(e) => {
+                      const updated = { ...settings, selectedModel: e.target.value };
+                      saveSettings(updated);
+                      setSettings(updated);
+                    }}
+                    className="input-field cursor-pointer"
+                    style={{ padding: '6px 10px', fontSize: '12px' }}
+                  >
+                    <optgroup label="Google Gemini">
+                      <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                      <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+                      <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                      <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                    </optgroup>
+                    <optgroup label="OpenAI">
+                      <option value="gpt-4o">GPT-4o (OpenAI)</option>
+                      <option value="gpt-4o-mini">GPT-4o Mini (OpenAI)</option>
+                    </optgroup>
+                    <optgroup label="Anthropic Claude">
+                      <option value="claude-3-5-sonnet-latest">Claude 3.5 Sonnet</option>
+                      <option value="claude-haiku-4-5">Claude 4.5 Haiku</option>
+                    </optgroup>
+                    <optgroup label="xAI Grok">
+                      <option value="grok-2-1212">Grok 2</option>
+                      <option value="grok-beta">Grok Beta</option>
+                      <option value="grok-4.1-fast">Grok 4.1 Fast</option>
+                      <option value="grok-4.3">Grok 4.3</option>
+                    </optgroup>
+                  </select>
+                </div>
+
+                <div className="form-group mb-0">
+                  <label className="input-label">Prompt Description / BOQ Text</label>
+                  <textarea
+                    value={aiPrompt}
+                    onChange={(e) => setAiPrompt(e.target.value)}
+                    rows="8"
+                    placeholder="e.g. Estimate Mr. Prashad: Gold hardware sliding shower enclosure 186 sqft at 750/sqft..."
+                    className="input-field font-sans resize-none text-xs"
+                    style={{ padding: '8px 10px', width: '100%', border: '1px solid var(--border)' }}
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleGenerateAI}
+                  disabled={loadingAI}
+                  className="btn w-full py-2 flex items-center justify-center gap-1.5"
                 >
-                  <optgroup label="Google Gemini">
-                    <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
-                    <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
-                    <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
-                    <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
-                  </optgroup>
-                  <optgroup label="OpenAI">
-                    <option value="gpt-4o">GPT-4o (OpenAI)</option>
-                    <option value="gpt-4o-mini">GPT-4o Mini (OpenAI)</option>
-                  </optgroup>
-                  <optgroup label="Anthropic Claude">
-                    <option value="claude-3-5-sonnet-latest">Claude 3.5 Sonnet</option>
-                    <option value="claude-haiku-4-5">Claude 4.5 Haiku</option>
-                  </optgroup>
-                  <optgroup label="xAI Grok">
-                    <option value="grok-2-1212">Grok 2</option>
-                    <option value="grok-beta">Grok Beta</option>
-                    <option value="grok-4.1-fast">Grok 4.1 Fast</option>
-                    <option value="grok-4.3">Grok 4.3</option>
-                  </optgroup>
-                </select>
+                  <Sparkles size={14} />
+                  {loadingAI ? 'AI is parsing...' : 'Generate Quote'}
+                </button>
               </div>
-
-              <div className="form-group">
-                <label>Prompt Description / BOQ Text</label>
-                <textarea
-                  value={aiPrompt}
-                  onChange={(e) => setAiPrompt(e.target.value)}
-                  rows="8"
-                  placeholder="e.g. Estimate Mr. Prashad: Gold hardware sliding shower enclosure 186 sqft at 750/sqft..."
-                  className="resize-none"
-                />
-              </div>
-
-              <button
-                type="button"
-                onClick={handleGenerateAI}
-                disabled={loadingAI}
-                className="btn w-full py-2 flex items-center justify-center gap-1.5"
-              >
-                <Sparkles size={14} />
-                {loadingAI ? 'AI is parsing...' : 'Generate Quote'}
-              </button>
             </div>
           </div>
         )}
@@ -1942,75 +1962,144 @@ Quote:
 
               {!showFormAiPrompt && (
                 <>
-
-              {/* Client Dropdown selector */}
-              <div className="form-group">
-                <label className="input-label">Select Saved Contact</label>
-                <select
-                  onChange={(e) => handleClientSelect(e.target.value)}
-                  className="input-field cursor-pointer"
-                >
-                  <option value="">-- Select repeat client --</option>
-                  {clients.map(c => (
-                    <option key={c.id} value={c.id}>{c.name} {c.company ? `(${c.company})` : ''}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="form-group">
-                  <label className="input-label">Billed To (Client) *</label>
-                  <input 
-                    type="text"
-                    value={activeQuote.client_name}
-                    onChange={(e) => updateQuoteField('client_name', e.target.value)}
-                    placeholder="Client Name"
-                    className="input-field"
-                  />
+                  {/* Card 1: Client & Contact Billing Details */}
+              <div className="bg-white border border-[var(--ui-border)] p-4 rounded-xl space-y-4 shadow-sm text-left">
+                <div className="flex items-center gap-1.5 border-b border-zinc-150 pb-2 mb-1">
+                  <span className="text-[10px] font-extrabold text-[var(--ui-accent, #B8933E)] uppercase tracking-wider">Client &amp; Contact Info</span>
                 </div>
-                <div className="form-group">
-                  <label className="input-label">Client GSTIN</label>
-                  <input 
-                    type="text"
-                    value={activeQuote.gstin}
-                    onChange={(e) => updateQuoteField('gstin', e.target.value)}
-                    placeholder="29AAMCM..."
-                    className="input-field font-mono uppercase"
-                  />
-                </div>
-              </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div className="form-group">
-                  <label className="input-label">Estimate Number</label>
-                  <input 
-                    type="text"
-                    value={activeQuote.quote_number}
-                    onChange={(e) => updateQuoteField('quote_number', e.target.value)}
-                    className="input-field font-mono"
-                  />
+                {/* Client Dropdown selector */}
+                <div className="form-group mb-0">
+                  <label className="input-label">Select Saved Contact</label>
+                  <select
+                    onChange={(e) => handleClientSelect(e.target.value)}
+                    className="input-field cursor-pointer"
+                  >
+                    <option value="">-- Select repeat client --</option>
+                    {clients.map(c => (
+                      <option key={c.id} value={c.id}>{c.name} {c.company ? `(${c.company})` : ''}</option>
+                    ))}
+                  </select>
                 </div>
-                <div className="form-group">
-                  <label className="input-label">Project Reference</label>
-                  <input 
-                    type="text"
-                    value={activeQuote.reference || ''}
-                    onChange={(e) => updateQuoteField('reference', e.target.value)}
-                    placeholder="e.g. HSR Office Site"
-                    className="input-field"
-                  />
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="form-group mb-0">
+                    <label className="input-label">Billed To (Client) *</label>
+                    <input 
+                      type="text"
+                      value={activeQuote.client_name}
+                      onChange={(e) => updateQuoteField('client_name', e.target.value)}
+                      placeholder="Client Name"
+                      className="input-field"
+                    />
+                  </div>
+                  <div className="form-group mb-0">
+                    <label className="input-label">Client GSTIN</label>
+                    <input 
+                      type="text"
+                      value={activeQuote.gstin}
+                      onChange={(e) => updateQuoteField('gstin', e.target.value)}
+                      placeholder="29AAMCM..."
+                      className="input-field font-mono uppercase"
+                    />
+                  </div>
                 </div>
               </div>
 
-              {/* Executive Summary (AI Generated) */}
-              <div className="form-group">
+              {/* Card 2: Quote Details & Meta */}
+              <div className="bg-white border border-[var(--ui-border)] p-4 rounded-xl space-y-4 shadow-sm text-left">
+                <div className="flex items-center gap-1.5 border-b border-zinc-150 pb-2 mb-1">
+                  <span className="text-[10px] font-extrabold text-[var(--ui-accent, #B8933E)] uppercase tracking-wider">Quote Details</span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="form-group mb-0">
+                    <label className="input-label">Estimate Number</label>
+                    <input 
+                      type="text"
+                      value={activeQuote.quote_number}
+                      onChange={(e) => updateQuoteField('quote_number', e.target.value)}
+                      className="input-field font-mono"
+                    />
+                  </div>
+                  <div className="form-group mb-0">
+                    <label className="input-label">Project Reference</label>
+                    <input 
+                      type="text"
+                      value={activeQuote.reference || ''}
+                      onChange={(e) => updateQuoteField('reference', e.target.value)}
+                      placeholder="e.g. HSR Office Site"
+                      className="input-field"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="form-group mb-0">
+                    <label className="input-label">Date</label>
+                    <input 
+                      type="date"
+                      value={getIsoDate(activeQuote.date)}
+                      onChange={(e) => updateQuoteField('date', e.target.value)}
+                      className="input-field cursor-pointer"
+                    />
+                  </div>
+                  <div className="form-group mb-0">
+                    <label className="input-label">Validity</label>
+                    <input 
+                      type="text"
+                      value={activeQuote.validity}
+                      onChange={(e) => updateQuoteField('validity', e.target.value)}
+                      className="input-field"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="form-group mb-0">
+                    <label className="input-label">Status</label>
+                    <select
+                      value={activeQuote.status}
+                      onChange={(e) => updateQuoteField('status', e.target.value)}
+                      className="input-field cursor-pointer"
+                    >
+                      <option value="Draft">Draft</option>
+                      <option value="Sent">Sent</option>
+                      <option value="Approved">Approved</option>
+                      <option value="Declined">Declined</option>
+                    </select>
+                  </div>
+                  <div className="form-group mb-0">
+                    <label className="input-label">Adjustment (₹)</label>
+                    <input 
+                      type="number"
+                      value={activeQuote.adjustment}
+                      onChange={(e) => updateQuoteField('adjustment', parseFloat(e.target.value) || 0)}
+                      className="input-field font-mono"
+                    />
+                  </div>
+                  <div className="form-group mb-0">
+                    <label className="input-label">Discount %</label>
+                    <input 
+                      type="number"
+                      value={activeQuote.quote_discount_pct || activeQuote.quoteDiscountPct || 0}
+                      onChange={(e) => updateQuoteField('quote_discount_pct', parseFloat(e.target.value) || 0)}
+                      placeholder="0"
+                      className="input-field font-mono"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Card 3: Executive Summary (AI) */}
+              <div className="bg-white border border-[var(--ui-border)] p-4 rounded-xl space-y-3 shadow-sm text-left">
                 <div className="flex justify-between items-center mb-1">
-                  <label className="input-label mb-0">Executive Summary (AI Generated)</label>
+                  <label className="input-label mb-0" style={{ fontSize: '10px', fontWeight: '800', color: 'var(--ui-text-muted)', textTransform: 'uppercase', letterSpacing: '0.02em' }}>Executive Summary</label>
                   <button
                     type="button"
                     onClick={handleGenerateSummary}
                     disabled={generatingSummary}
-                    className="px-2.5 py-0.5 rounded-full text-[10px] bg-indigo-50 border border-indigo-100 text-[var(--ui-accent, #4F46E5)] hover:bg-indigo-100 transition-colors font-bold flex items-center gap-1 cursor-pointer"
+                    className="px-2.5 py-0.5 rounded-full text-[10px] bg-indigo-50 border border-indigo-100 text-[var(--ui-accent, #B8933E)] hover:bg-indigo-100 transition-colors font-bold flex items-center gap-1 cursor-pointer"
                   >
                     {generatingSummary ? 'Generating...' : '✨ AI Generate'}
                   </button>
@@ -2023,62 +2112,6 @@ Quote:
                   className="input-field font-sans resize-none h-16"
                   style={{ padding: '8px 10px', fontSize: '11.5px' }}
                 />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="form-group">
-                  <label className="input-label">Date</label>
-                  <input 
-                    type="date"
-                    value={getIsoDate(activeQuote.date)}
-                    onChange={(e) => updateQuoteField('date', e.target.value)}
-                    className="input-field cursor-pointer"
-                  />
-                </div>
-                <div className="form-group">
-                  <label className="input-label">Validity</label>
-                  <input 
-                    type="text"
-                    value={activeQuote.validity}
-                    onChange={(e) => updateQuoteField('validity', e.target.value)}
-                    className="input-field"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-3">
-                <div className="form-group">
-                  <label className="input-label">Status</label>
-                  <select
-                    value={activeQuote.status}
-                    onChange={(e) => updateQuoteField('status', e.target.value)}
-                    className="input-field cursor-pointer"
-                  >
-                    <option value="Draft">Draft</option>
-                    <option value="Sent">Sent</option>
-                    <option value="Approved">Approved</option>
-                    <option value="Declined">Declined</option>
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label className="input-label">Adjustment / Offset (₹)</label>
-                  <input 
-                    type="number"
-                    value={activeQuote.adjustment}
-                    onChange={(e) => updateQuoteField('adjustment', parseFloat(e.target.value) || 0)}
-                    className="input-field font-mono"
-                  />
-                </div>
-                <div className="form-group">
-                  <label className="input-label">Quote Discount %</label>
-                  <input 
-                    type="number"
-                    value={activeQuote.quote_discount_pct || activeQuote.quoteDiscountPct || 0}
-                    onChange={(e) => updateQuoteField('quote_discount_pct', parseFloat(e.target.value) || 0)}
-                    placeholder="0"
-                    className="input-field font-mono"
-                  />
-                </div>
               </div>
 
               {/* Items List Section */}
