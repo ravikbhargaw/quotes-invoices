@@ -136,77 +136,95 @@ export default function Dashboard({
       ) : (
         <div className="history-list mt-4">
           {filteredQuotes.map((q) => (
-            <div key={q.id} className="quote-card">
-              <div className="flex items-start justify-between gap-1 mb-2">
-                <div>
-                  <span className="font-mono text-[9px] text-[var(--ui-text-muted)] block">
-                    {q.quote_number} &nbsp;·&nbsp; {q.date || 'No Date'}
+            <div key={q.id} className="quote-card bg-white border border-[var(--ui-border)] rounded-xl p-4 shadow-sm hover:shadow transition-shadow duration-200">
+              
+              {/* Card Metadata List */}
+              <div className="space-y-2 text-xs mb-3.5">
+                
+                {/* 1. Quote Number */}
+                <div className="flex justify-between items-center border-b border-zinc-100 pb-1.5">
+                  <span className="text-[10px] text-[var(--ui-text-muted)] font-semibold uppercase tracking-wider">Quote Number</span>
+                  <span className="font-bold text-zinc-900 font-mono text-[11.5px]">
+                    {q.quote_number}
                   </span>
-                  <h3 className="text-xs font-bold text-zinc-800 mt-0.5">
+                </div>
+
+                {/* 2. Customer Name */}
+                <div className="flex justify-between items-center border-b border-zinc-100 pb-1.5">
+                  <span className="text-[10px] text-[var(--ui-text-muted)] font-semibold uppercase tracking-wider">Customer Name</span>
+                  <span className="font-semibold text-zinc-800 text-right max-w-[150px] truncate">
                     {q.client_name || 'Unnamed Client'}
-                  </h3>
-                  {q.reference && (
-                    <span className="text-[9px] text-[var(--ui-accent)] font-medium">
-                      Ref: {q.reference}
-                    </span>
-                  )}
-                </div>
-                <div className="flex flex-col items-end gap-1 shrink-0">
-                  <span 
-                    onClick={() => onToggleStatus && onToggleStatus(q)}
-                    className={`text-[8.5px] px-1.5 py-0.5 rounded border font-bold uppercase tracking-wider transition-colors select-none ${getStatusStyle(q.status)}`}
-                    title="Click to toggle status (Draft / Finalised)"
-                  >
-                    {q.status}
-                  </span>
-                  <span className="text-[8px] bg-zinc-100 text-zinc-500 px-1.5 py-0.5 rounded font-medium uppercase border border-zinc-200">
-                    {q.format === 'proposal' ? 'Proposal' : 'Estimate'}
                   </span>
                 </div>
-              </div>
 
-              {/* Scope of Work Snippet */}
-              <div className="bg-[var(--ui-bg)] rounded p-2 text-[10px] text-[var(--ui-text-muted)] line-clamp-1 mb-2">
-                {q.items && q.items.length > 0 
-                  ? q.items.map(item => `${item.qty} ${item.unit} x ${item.name}`).join(', ')
-                  : 'No items defined'
-                }
-              </div>
+                {/* 3. Date Created */}
+                <div className="flex justify-between items-center border-b border-zinc-100 pb-1.5">
+                  <span className="text-[10px] text-[var(--ui-text-muted)] font-semibold uppercase tracking-wider">Date Created</span>
+                  <span className="text-zinc-600 font-medium">
+                    {q.date || 'No Date'}
+                  </span>
+                </div>
 
-              <div className="flex items-center justify-between border-t border-[var(--ui-border)] pt-2">
-                <div>
-                  <span className="text-[8px] text-[var(--ui-text-muted)] block uppercase tracking-wider">Total Value</span>
-                  <span className="text-xs font-bold text-zinc-800 font-mono">
+                {/* 4. Total Value (EX GST) */}
+                <div className="flex justify-between items-center border-b border-zinc-100 pb-1.5">
+                  <span className="text-[10px] text-[var(--ui-text-muted)] font-semibold uppercase tracking-wider">Total Value (EX GST)</span>
+                  <span className="font-mono text-zinc-700 font-semibold">
+                    ₹{Math.round(parseFloat(q.subtotal) || 0).toLocaleString('en-IN')}
+                  </span>
+                </div>
+
+                {/* 5. Grand Value (Inc. GST) */}
+                <div className="flex justify-between items-center border-b border-zinc-100 pb-1.5">
+                  <span className="text-[10px] text-[var(--ui-text-muted)] font-semibold uppercase tracking-wider">Grand Value (Inc. GST)</span>
+                  <span className="font-mono text-[var(--ui-accent, #B8933E)] font-bold text-xs">
                     ₹{Math.round(parseFloat(q.total) || 0).toLocaleString('en-IN')}
                   </span>
                 </div>
 
-                <div className="flex items-center gap-1">
-                  <button 
-                    onClick={() => onEditQuote(q)}
-                    className="btn-outline px-2 py-1 text-[10px]"
-                    title="Load & Edit"
+                {/* 6. Status */}
+                <div className="flex justify-between items-center pb-0.5">
+                  <span className="text-[10px] text-[var(--ui-text-muted)] font-semibold uppercase tracking-wider">Status</span>
+                  <span 
+                    onClick={() => onToggleStatus && onToggleStatus(q)}
+                    className={`text-[8.5px] px-2 py-0.5 rounded-full border font-bold uppercase tracking-wider transition-colors select-none ${getStatusStyle(q.status)}`}
+                    title="Click to toggle status"
                   >
-                    <Edit3 size={10} /> Load
-                  </button>
-                  <button 
-                    onClick={() => onDuplicateQuote(q)}
-                    className="btn-outline px-2 py-1 text-[10px]"
-                    title="Duplicate"
-                  >
-                    <Copy size={10} /> Dup
-                  </button>
-                  {isAdmin && (
-                    <button 
-                      onClick={() => onDeleteQuote(q.id)}
-                      className="p-1 text-rose-500 hover:bg-rose-50 rounded"
-                      title="Delete Quote"
-                    >
-                      <Trash2 size={12} />
-                    </button>
-                  )}
+                    {q.status}
+                  </span>
                 </div>
+
               </div>
+
+              {/* Action Buttons Row */}
+              <div className="flex items-center gap-2 border-t border-[var(--ui-border)] pt-2.5">
+                <button 
+                  onClick={() => onEditQuote(q)}
+                  className="flex-1 flex items-center justify-center gap-1.5 bg-zinc-50 border border-zinc-200 text-zinc-700 hover:bg-zinc-100 hover:border-zinc-300 py-1.5 px-3 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors"
+                  title="Load & Edit Quote"
+                >
+                  <Edit3 size={11} /> Load
+                </button>
+                
+                <button 
+                  onClick={() => onDuplicateQuote(q)}
+                  className="flex-1 flex items-center justify-center gap-1.5 bg-zinc-50 border border-zinc-200 text-zinc-700 hover:bg-zinc-100 hover:border-zinc-300 py-1.5 px-3 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors"
+                  title="Duplicate Quote"
+                >
+                  <Copy size={11} /> Dup
+                </button>
+                
+                {isAdmin && (
+                  <button 
+                    onClick={() => onDeleteQuote(q.id)}
+                    className="flex-none flex items-center justify-center bg-rose-50 border border-rose-100 text-rose-600 hover:bg-rose-100 hover:text-rose-700 p-1.5 rounded-lg transition-colors"
+                    title="Delete Quote"
+                    style={{ width: '28px', height: '28px' }}
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                )}
+              </div>
+
             </div>
           ))}
         </div>
