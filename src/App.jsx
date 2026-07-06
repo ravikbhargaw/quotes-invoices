@@ -265,8 +265,6 @@ export default function App() {
         if (localQuotes.length > 0 || localClients.length > 0) {
           console.log(`Auto-syncing ${localQuotes.length} local quotes and ${localClients.length} local clients...`);
           await syncLocalDataToCloud();
-          localStorage.setItem('meaven_quotes', '[]');
-          localStorage.setItem('meaven_clients', '[]');
         }
       } catch (err) {
         console.error('Auto-sync failed:', err);
