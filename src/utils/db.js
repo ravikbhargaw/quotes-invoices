@@ -2,6 +2,11 @@ import { createClient } from '@supabase/supabase-js';
 
 const SETTINGS_VERSION = 5;
 
+const isUUID = (str) => {
+  if (!str) return false;
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+};
+
 // Default settings object
 const DEFAULT_SETTINGS = {
   _version: SETTINGS_VERSION,
@@ -335,7 +340,7 @@ export async function saveClient(client) {
   const supabase = getSupabase();
   if (supabase) {
     try {
-      if (client.id && client.id.length > 10) { // UUID
+      if (client.id && isUUID(client.id)) { // UUID
         const { data, error } = await supabase
           .from('clients')
           .update(client)
@@ -474,23 +479,52 @@ export async function saveQuote(quote) {
   const supabase = getSupabase();
   if (supabase) {
     try {
-      if (quote.id && quote.id.length > 10) { // UUID
-        const { data, error } = await supabase
+      let data, error;
+      if (quote.id && isUUID(quote.id)) { // UUID
+        const res = await supabase
           .from('quotes')
           .update(quote)
           .eq('id', quote.id)
           .select();
-        if (error) throw error;
-        return data[0];
+        data = res.data;
+        error = res.error;
       } else {
         const { id, ...newQuote } = quote; // Let Supabase gen UUID
-        const { data, error } = await supabase
+        const res = await supabase
           .from('quotes')
           .insert(newQuote)
           .select();
-        if (error) throw error;
-        return data[0];
+        data = res.data;
+        error = res.error;
       }
+
+      if (error) {
+        // If save failed because of a missing column, strip non-DB fields and retry
+        if (error.code === 'PGRST204' || error.message?.includes('column')) {
+          console.warn('Supabase save failed due to missing column schema mismatch, retrying with sanitized quote...', error);
+          const { quote_discount_pct, quoteDiscountPct, ...sanitized } = quote;
+          
+          if (quote.id && isUUID(quote.id)) {
+            const retryRes = await supabase
+              .from('quotes')
+              .update(sanitized)
+              .eq('id', quote.id)
+              .select();
+            if (retryRes.error) throw retryRes.error;
+            return retryRes.data[0];
+          } else {
+            const { id, ...sanitizedNew } = sanitized;
+            const retryRes = await supabase
+              .from('quotes')
+              .insert(sanitizedNew)
+              .select();
+            if (retryRes.error) throw retryRes.error;
+            return retryRes.data[0];
+          }
+        }
+        throw error;
+      }
+      return data[0];
     } catch (e) {
       console.error('Failed to save quote to Supabase, falling back to local', e);
     }
@@ -563,7 +597,13 @@ export async function syncLocalDataToCloud() {
       } else {
         cleanQuote.client_id = null;
       }
-      const { error } = await supabase.from('quotes').insert(cleanQuote);
+      let { error } = await supabase.from('quotes').insert(cleanQuote);
+      if (error && (error.code === 'PGRST204' || error.message?.includes('column'))) {
+        console.warn('Sync insert failed due to missing column schema mismatch, retrying with sanitized quote...');
+        const { quote_discount_pct, quoteDiscountPct, ...sanitized } = cleanQuote;
+        const retryRes = await supabase.from('quotes').insert(sanitized);
+        error = retryRes.error;
+      }
       if (error) throw error;
     }
 
