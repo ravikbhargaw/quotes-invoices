@@ -4,6 +4,8 @@ import { Plus, Search, Copy, Edit3, Trash2 } from 'lucide-react';
 /* ─── Main Dashboard ──────────────────────────────────────────────────────── */
 export default function Dashboard({ 
   quotes, 
+  previewQuote,
+  onPreviewQuote,
   onEditQuote, 
   onDuplicateQuote, 
   onDeleteQuote, 
@@ -119,6 +121,8 @@ export default function Dashboard({
               key={q.id}
               q={q}
               formatDate={formatDate}
+              previewQuote={previewQuote}
+              onPreview={() => onPreviewQuote && onPreviewQuote(q)}
               onEdit={() => onEditQuote(q)}
               onDuplicate={() => onDuplicateQuote(q)}
               onDelete={() => onDeleteQuote(q.id)}
@@ -133,10 +137,13 @@ export default function Dashboard({
 }
 
 /* ─── Isolated Quote Card — 100% inline styles, zero CSS conflict ─────────── */
-function QuoteCard({ q, formatDate, onEdit, onDuplicate, onDelete, onToggleStatus }) {
+function QuoteCard({ q, formatDate, previewQuote, onPreview, onEdit, onDuplicate, onDelete, onToggleStatus }) {
   const [loadHover, setLoadHover]  = useState(false);
   const [dupHover,  setDupHover]   = useState(false);
   const [delHover,  setDelHover]   = useState(false);
+  const [cardHover, setCardHover]  = useState(false);
+
+  const isSelected = previewQuote && previewQuote.id === q.id;
 
   /* Shared base for all three action buttons */
   const btnBase = {
@@ -159,14 +166,26 @@ function QuoteCard({ q, formatDate, onEdit, onDuplicate, onDelete, onToggleStatu
 
   return (
     <div
+      onClick={onPreview}
+      onMouseEnter={() => setCardHover(true)}
+      onMouseLeave={() => setCardHover(false)}
       style={{
         background:   'linear-gradient(180deg, #FFFFFF 0%, #FFFDF9 100%)',
-        border:       '1px solid #EAE5D8',
+        border:       isSelected 
+                        ? '1px solid #B98A2E' 
+                        : (cardHover ? '1px solid #D2C7B1' : '1px solid #EAE5D8'),
         borderRadius: '16px',
         padding:      '16px 18px 14px',
         position:     'relative',
         overflow:     'hidden',
-        boxShadow:    '0 1px 1px rgba(18,33,63,0.03), 0 4px 10px rgba(18,33,63,0.04), 0 16px 32px -14px rgba(18,33,63,0.14)',
+        cursor:       'pointer',
+        transform:    cardHover ? 'translateY(-2px)' : 'none',
+        boxShadow:    isSelected
+                        ? '0 0 0 3px rgba(185,138,46,0.2), 0 8px 24px rgba(185,138,46,0.15)'
+                        : (cardHover 
+                            ? '0 8px 20px rgba(18,33,63,0.08), 0 20px 40px -10px rgba(18,33,63,0.18)' 
+                            : '0 1px 1px rgba(18,33,63,0.03), 0 4px 10px rgba(18,33,63,0.04), 0 16px 32px -14px rgba(18,33,63,0.14)'),
+        transition:   'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
       }}
     >
 
@@ -175,7 +194,10 @@ function QuoteCard({ q, formatDate, onEdit, onDuplicate, onDelete, onToggleStatu
         position:   'absolute',
         top: 0, left: 0, right: 0,
         height:     '3px',
-        background: 'linear-gradient(90deg, #0D1B33 0%, #B98A2E 55%, #E9D6A6 100%)',
+        background: isSelected
+                      ? 'linear-gradient(90deg, #B98A2E 0%, #E9D6A6 50%, #B98A2E 100%)'
+                      : 'linear-gradient(90deg, #0D1B33 0%, #B98A2E 55%, #E9D6A6 100%)',
+        transition: 'background 0.25s ease',
       }} />
 
       {/* ── Row 1: Quote ID + Status pill ──────────────────────────────────── */}
@@ -194,7 +216,7 @@ function QuoteCard({ q, formatDate, onEdit, onDuplicate, onDelete, onToggleStatu
 
         {/* Ghost status pill */}
         <div
-          onClick={onToggleStatus}
+          onClick={(e) => { e.stopPropagation(); onToggleStatus && onToggleStatus(e); }}
           style={{
             display:      'flex',
             alignItems:   'center',
@@ -332,7 +354,7 @@ function QuoteCard({ q, formatDate, onEdit, onDuplicate, onDelete, onToggleStatu
 
         {/* Load */}
         <button
-          onClick={onEdit}
+          onClick={(e) => { e.stopPropagation(); onEdit(e); }}
           onMouseEnter={() => setLoadHover(true)}
           onMouseLeave={() => setLoadHover(false)}
           title="Load & Edit Quote"
@@ -350,7 +372,7 @@ function QuoteCard({ q, formatDate, onEdit, onDuplicate, onDelete, onToggleStatu
 
         {/* Duplicate */}
         <button
-          onClick={onDuplicate}
+          onClick={(e) => { e.stopPropagation(); onDuplicate(e); }}
           onMouseEnter={() => setDupHover(true)}
           onMouseLeave={() => setDupHover(false)}
           title="Duplicate Quote"
@@ -368,7 +390,7 @@ function QuoteCard({ q, formatDate, onEdit, onDuplicate, onDelete, onToggleStatu
 
         {/* Delete — fixed 40px, icon only */}
         <button
-          onClick={onDelete}
+          onClick={(e) => { e.stopPropagation(); onDelete(e); }}
           onMouseEnter={() => setDelHover(true)}
           onMouseLeave={() => setDelHover(false)}
           title="Delete Quote"

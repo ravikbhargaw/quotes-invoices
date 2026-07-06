@@ -133,6 +133,25 @@ export default function App() {
       if (!confirmLeave) return;
     }
     setActiveTab(newTab);
+    if (newTab === 'history') {
+      if (quotes && quotes.length > 0) {
+        const sorted = [...quotes].sort((a, b) => {
+          const getVal = (val) => {
+            if (!val) return 0;
+            const parsed = new Date(val).getTime();
+            return isNaN(parsed) ? 0 : parsed;
+          };
+          const timeA = getVal(a.updated_at) || getVal(a.created_at) || getVal(a.date);
+          const timeB = getVal(b.updated_at) || getVal(b.created_at) || getVal(b.date);
+          return timeB - timeA;
+        });
+        setPreviewQuote(sorted[0]);
+      } else {
+        setPreviewQuote(null);
+      }
+    } else {
+      setPreviewQuote(null);
+    }
   };
 
   const handleForcePasswordReset = async (e) => {
@@ -196,6 +215,9 @@ export default function App() {
     tax: 0,
     total: 0
   });
+
+  // State for previewing historical quotes in the log
+  const [previewQuote, setPreviewQuote] = useState(null);
 
   // State for AI Prompt Pane
   const [aiPrompt, setAiPrompt] = useState('');
@@ -272,6 +294,9 @@ export default function App() {
   const handleDeleteQuote = async (id) => {
     if (confirm('Are you sure you want to delete this quote?')) {
       await deleteQuote(id);
+      if (previewQuote && previewQuote.id === id) {
+        setPreviewQuote(null);
+      }
       loadData();
     }
   };
@@ -280,6 +305,9 @@ export default function App() {
     const nextStatus = quoteToToggle.status === 'Finalised' ? 'Draft' : 'Finalised';
     const updated = { ...quoteToToggle, status: nextStatus };
     await saveQuote(updated);
+    if (previewQuote && previewQuote.id === quoteToToggle.id) {
+      setPreviewQuote(updated);
+    }
     loadData();
   };
 
@@ -328,8 +356,12 @@ export default function App() {
 
   // Active Quote Field Changer
   const updateQuoteField = (field, val) => {
-    setActiveQuote(prev => ({ ...prev, [field]: val }));
-    setIsDirty(true);
+    if (previewQuote) {
+      setPreviewQuote(prev => ({ ...prev, [field]: val }));
+    } else {
+      setActiveQuote(prev => ({ ...prev, [field]: val }));
+      setIsDirty(true);
+    }
   };
 
   // Saved client dropdown selection handler
@@ -1398,8 +1430,8 @@ Quote:
   };
 
   const handlePrint = async () => {
-    // Automatically save the draft first if a client name is entered
-    if (activeQuote.client_name?.trim()) {
+    // Automatically save the draft first if we are editing and a client name is entered
+    if (!previewQuote && activeQuote.client_name?.trim()) {
       const saved = await saveQuote(activeQuote);
       if (saved) {
         setActiveQuote(saved);
@@ -2774,9 +2806,12 @@ Quote:
               <Dashboard 
                 quotes={quotes}
                 clients={clients}
+                previewQuote={previewQuote}
+                onPreviewQuote={(q) => setPreviewQuote(q)}
                 onEditQuote={(q) => {
                   setActiveQuote({ ...q });
                   setIsDirty(false);
+                  setPreviewQuote(null);
                   setActiveTab('form');
                 }}
                 onDuplicateQuote={handleDuplicateQuote}
@@ -2843,13 +2878,13 @@ Quote:
             <div className="format-toggle">
               <button
                 onClick={() => updateQuoteField('format', 'estimate')}
-                className={`toggle-btn ${activeQuote.format === 'estimate' ? 'active' : ''}`}
+                className={`toggle-btn ${(previewQuote || activeQuote).format === 'estimate' ? 'active' : ''}`}
               >
                 Premium Estimate
               </button>
               <button
                 onClick={() => updateQuoteField('format', 'proposal')}
-                className={`toggle-btn ${activeQuote.format === 'proposal' ? 'active' : ''}`}
+                className={`toggle-btn ${(previewQuote || activeQuote).format === 'proposal' ? 'active' : ''}`}
               >
                 Project Proposal
               </button>
@@ -2859,7 +2894,7 @@ Quote:
 
         {/* Live Preview Canvas */}
         <div className="w-full pb-28 flex justify-center">
-          <DocumentPreview quote={activeQuote} settings={settings} />
+          <DocumentPreview quote={previewQuote || activeQuote} settings={settings} />
         </div>
 
         {/* Bottom bar: Print / Save PDF button (full width, navy fill) */}
