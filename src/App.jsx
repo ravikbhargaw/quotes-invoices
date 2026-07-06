@@ -301,8 +301,8 @@ export default function App() {
     }
   };
 
-  const handleToggleQuoteStatus = async (quoteToToggle) => {
-    const nextStatus = quoteToToggle.status === 'Finalised' ? 'Draft' : 'Finalised';
+  const handleToggleQuoteStatus = async (quoteToToggle, newStatus) => {
+    const nextStatus = newStatus || (quoteToToggle.status === 'Finalised' ? 'Draft' : 'Finalised');
     const updated = { ...quoteToToggle, status: nextStatus };
     await saveQuote(updated);
     if (previewQuote && previewQuote.id === quoteToToggle.id) {

@@ -126,7 +126,7 @@ export default function Dashboard({
               onEdit={() => onEditQuote(q)}
               onDuplicate={() => onDuplicateQuote(q)}
               onDelete={() => onDeleteQuote(q.id)}
-              onToggleStatus={() => onToggleStatus && onToggleStatus(q)}
+              onToggleStatus={(quote, newStatus) => onToggleStatus && onToggleStatus(quote, newStatus)}
             />
           ))}
         </div>
@@ -214,17 +214,15 @@ function QuoteCard({ q, formatDate, previewQuote, onPreview, onEdit, onDuplicate
           {q.quote_number}
         </span>
 
-        {/* Ghost status pill */}
+        {/* Dropdown status pill */}
         <div
-          onClick={(e) => { e.stopPropagation(); onToggleStatus && onToggleStatus(e); }}
           style={{
             display:      'flex',
             alignItems:   'center',
-            gap:          '5px',
+            gap:          '4px',
             border:       '1px solid #E4D2A0',
             borderRadius: '100px',
-            padding:      '3px 9px 3px 7px',
-            cursor:       'pointer',
+            padding:      '2px 4px 2px 7px',
             background:   'transparent',
           }}
         >
@@ -237,16 +235,37 @@ function QuoteCard({ q, formatDate, previewQuote, onPreview, onEdit, onDuplicate
             boxShadow:   '0 0 0 3px rgba(185,138,46,0.15)',
             flexShrink:   0,
           }} />
-          <span style={{
-            fontSize:      '9.5px',
-            fontWeight:     700,
-            letterSpacing: '0.8px',
-            textTransform: 'uppercase',
-            color:         '#8A6417',
-            lineHeight:     1,
-          }}>
-            {q.status}
-          </span>
+          <select
+            value={q.status}
+            onClick={(e) => e.stopPropagation()} // Prevent card preview click when opening dropdown
+            onChange={(e) => {
+              e.stopPropagation();
+              onToggleStatus && onToggleStatus(q, e.target.value);
+            }}
+            style={{
+              fontSize:      '9.5px',
+              fontWeight:     700,
+              letterSpacing: '0.8px',
+              textTransform: 'uppercase',
+              color:         '#8A6417',
+              background:   'transparent',
+              border:       'none',
+              padding:      '0 12px 0 0', // Padding to separate text and custom arrow
+              margin:       0,
+              cursor:       'pointer',
+              outline:      'none',
+              appearance:   'none',
+              backgroundImage: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 24 24' fill='none' stroke='%238A6417' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>")`,
+              backgroundRepeat: 'no-repeat',
+              backgroundPosition: 'right center',
+              lineHeight:     1,
+              fontFamily:     'inherit',
+            }}
+          >
+            <option value="Draft" style={{ color: '#12213F', textTransform: 'uppercase', fontSize: '10.5px' }}>Draft</option>
+            <option value="Sent" style={{ color: '#12213F', textTransform: 'uppercase', fontSize: '10.5px' }}>Sent</option>
+            <option value="Finalised" style={{ color: '#12213F', textTransform: 'uppercase', fontSize: '10.5px' }}>Finalised</option>
+          </select>
         </div>
       </div>
 
