@@ -503,7 +503,7 @@ export async function saveQuote(quote) {
         // If save failed because of a missing column, strip non-DB fields and retry
         if (error.code === 'PGRST204' || error.message?.includes('column')) {
           console.warn('Supabase save failed due to missing column schema mismatch, retrying with sanitized quote...', error);
-          const { quote_discount_pct, quoteDiscountPct, ...sanitized } = quote;
+          const { quote_discount_pct, quoteDiscountPct, desc, ...sanitized } = quote;
           
           if (quote.id && isUUID(quote.id)) {
             const retryRes = await supabase
@@ -620,7 +620,7 @@ export async function syncLocalDataToCloud() {
         let { error } = await supabase.from('quotes').insert(cleanQuote);
         if (error && (error.code === 'PGRST204' || error.message?.includes('column'))) {
           console.warn('Sync insert failed due to missing column schema mismatch, retrying with sanitized quote...');
-          const { quote_discount_pct, quoteDiscountPct, ...sanitized } = cleanQuote;
+          const { quote_discount_pct, quoteDiscountPct, desc, ...sanitized } = cleanQuote;
           const retryRes = await supabase.from('quotes').insert(sanitized);
           error = retryRes.error;
         }
