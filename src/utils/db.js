@@ -579,39 +579,60 @@ export async function syncLocalDataToCloud() {
     let clientMapping = {}; // local_id -> supabase_uuid
 
     // Sync Clients
+    const remainingClients = [...localClients];
     for (const c of localClients) {
-      const { id, created_at, updated_at, ...cleanClient } = c;
-      const { data, error } = await supabase.from('clients').insert(cleanClient).select();
-      if (error) throw error;
-      if (data && data[0]) {
-        clientMapping[id] = data[0].id;
+      try {
+        const { id, created_at, updated_at, ...cleanClient } = c;
+        const { data, error } = await supabase.from('clients').insert(cleanClient).select();
+        if (error) throw error;
+        if (data && data[0]) {
+          clientMapping[id] = data[0].id;
+          
+          // Successfully synced, remove from remaining and update local storage immediately
+          const idx = remainingClients.findIndex(item => item.id === id);
+          if (idx !== -1) {
+            remainingClients.splice(idx, 1);
+            saveLocalClients(remainingClients);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to sync client during loop:', c, err);
       }
     }
 
     // Sync Quotes
+    const remainingQuotes = [...localQuotes];
     for (const q of localQuotes) {
-      const { id, created_at, updated_at, ...cleanQuote } = q;
-      // Map local client_id to supabase uuid
-      if (cleanQuote.client_id && clientMapping[cleanQuote.client_id]) {
-        cleanQuote.client_id = clientMapping[cleanQuote.client_id];
-      } else {
-        cleanQuote.client_id = null;
+      try {
+        const { id, created_at, updated_at, ...cleanQuote } = q;
+        // Map local client_id to supabase uuid
+        if (cleanQuote.client_id && clientMapping[cleanQuote.client_id]) {
+          cleanQuote.client_id = clientMapping[cleanQuote.client_id];
+        } else {
+          cleanQuote.client_id = null;
+        }
+        
+        let { error } = await supabase.from('quotes').insert(cleanQuote);
+        if (error && (error.code === 'PGRST204' || error.message?.includes('column'))) {
+          console.warn('Sync insert failed due to missing column schema mismatch, retrying with sanitized quote...');
+          const { quote_discount_pct, quoteDiscountPct, ...sanitized } = cleanQuote;
+          const retryRes = await supabase.from('quotes').insert(sanitized);
+          error = retryRes.error;
+        }
+        if (error) throw error;
+        
+        // Successfully synced, remove from remaining and update local storage immediately
+        const idx = remainingQuotes.findIndex(item => item.id === id);
+        if (idx !== -1) {
+          remainingQuotes.splice(idx, 1);
+          saveLocalQuotes(remainingQuotes);
+        }
+      } catch (err) {
+        console.error('Failed to sync quote during loop:', q, err);
       }
-      let { error } = await supabase.from('quotes').insert(cleanQuote);
-      if (error && (error.code === 'PGRST204' || error.message?.includes('column'))) {
-        console.warn('Sync insert failed due to missing column schema mismatch, retrying with sanitized quote...');
-        const { quote_discount_pct, quoteDiscountPct, ...sanitized } = cleanQuote;
-        const retryRes = await supabase.from('quotes').insert(sanitized);
-        error = retryRes.error;
-      }
-      if (error) throw error;
     }
 
-    // Clear local lists
-    saveLocalClients([]);
-    saveLocalQuotes([]);
-
-    return { success: true, message: `Synced ${localClients.length} clients and ${localQuotes.length} quotes.` };
+    return { success: true, message: `Synced local data. Remaining unsynced: ${remainingClients.length} clients, ${remainingQuotes.length} quotes.` };
   } catch (e) {
     console.error('Sync failed:', e);
     return { success: false, message: e.message };
