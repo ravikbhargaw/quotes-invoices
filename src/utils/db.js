@@ -364,21 +364,22 @@ export async function saveClient(client) {
 
   // Local storage fallback
   const clients = getLocalClients();
+  const fallbackClient = { ...client, _isLocalFallback: true };
   if (client.id) {
     const idx = clients.findIndex(c => c.id === client.id);
     if (idx !== -1) {
-      clients[idx] = { ...client, updated_at: new Date().toISOString() };
+      clients[idx] = { ...fallbackClient, updated_at: new Date().toISOString() };
     } else {
-      clients.push(client);
+      clients.push(fallbackClient);
     }
   } else {
-    client.id = 'client_' + Math.random().toString(36).substr(2, 9);
-    client.created_at = new Date().toISOString();
-    client.updated_at = new Date().toISOString();
-    clients.push(client);
+    fallbackClient.id = 'client_' + Math.random().toString(36).substr(2, 9);
+    fallbackClient.created_at = new Date().toISOString();
+    fallbackClient.updated_at = new Date().toISOString();
+    clients.push(fallbackClient);
   }
   saveLocalClients(clients);
-  return client;
+  return fallbackClient;
 }
 
 // Delete Client
@@ -532,21 +533,22 @@ export async function saveQuote(quote) {
 
   // Local storage fallback
   const quotes = getLocalQuotes();
+  const fallbackQuote = { ...quote, _isLocalFallback: true };
   if (quote.id) {
     const idx = quotes.findIndex(q => q.id === quote.id);
     if (idx !== -1) {
-      quotes[idx] = { ...quote, updated_at: new Date().toISOString() };
+      quotes[idx] = { ...fallbackQuote, updated_at: new Date().toISOString() };
     } else {
-      quotes.push(quote);
+      quotes.push(fallbackQuote);
     }
   } else {
-    quote.id = 'quote_' + Math.random().toString(36).substr(2, 9);
-    quote.created_at = new Date().toISOString();
-    quote.updated_at = new Date().toISOString();
-    quotes.push(quote);
+    fallbackQuote.id = 'quote_' + Math.random().toString(36).substr(2, 9);
+    fallbackQuote.created_at = new Date().toISOString();
+    fallbackQuote.updated_at = new Date().toISOString();
+    quotes.push(fallbackQuote);
   }
   saveLocalQuotes(quotes);
-  return quote;
+  return fallbackQuote;
 }
 
 // Delete Quote
@@ -571,6 +573,8 @@ export async function deleteQuote(id) {
 export async function syncLocalDataToCloud() {
   const supabase = getSupabase();
   if (!supabase) return { success: false, message: 'Supabase is not connected' };
+
+  let syncErrors = [];
 
   try {
     const localClients = getLocalClients();
@@ -597,6 +601,7 @@ export async function syncLocalDataToCloud() {
         }
       } catch (err) {
         console.error('Failed to sync client during loop:', c, err);
+        syncErrors.push(`Client "${c.name || c.id}": ${err.message || err}`);
       }
     }
 
@@ -629,10 +634,18 @@ export async function syncLocalDataToCloud() {
         }
       } catch (err) {
         console.error('Failed to sync quote during loop:', q, err);
+        syncErrors.push(`Quote "${q.quote_number || q.id}": ${err.message || err}`);
       }
     }
 
-    return { success: true, message: `Synced local data. Remaining unsynced: ${remainingClients.length} clients, ${remainingQuotes.length} quotes.` };
+    if (syncErrors.length > 0) {
+      return { 
+        success: false, 
+        message: `Sync completed with errors:\n- ${syncErrors.join('\n- ')}` 
+      };
+    }
+
+    return { success: true, message: `Synced local data successfully.` };
   } catch (e) {
     console.error('Sync failed:', e);
     return { success: false, message: e.message };

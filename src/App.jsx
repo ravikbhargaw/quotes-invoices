@@ -264,7 +264,10 @@ export default function App() {
         const localClients = JSON.parse(localStorage.getItem('meaven_clients') || '[]');
         if (localQuotes.length > 0 || localClients.length > 0) {
           console.log(`Auto-syncing ${localQuotes.length} local quotes and ${localClients.length} local clients...`);
-          await syncLocalDataToCloud();
+          const syncRes = await syncLocalDataToCloud();
+          if (syncRes && !syncRes.success) {
+            alert(syncRes.message);
+          }
         }
       } catch (err) {
         console.error('Auto-sync failed:', err);
@@ -1382,9 +1385,15 @@ Quote:
     const saved = await saveQuote(activeQuote);
     if (saved) {
       setActiveQuote(saved);
+      setIsDirty(false);
+      if (saved._isLocalFallback) {
+        alert('Warning: Quote saved to local browser cache ONLY (Failed to sync to Supabase cloud database). Check your database connection/credentials.');
+      } else {
+        alert('Quote saved successfully to cloud database!');
+      }
+    } else {
+      alert('Error: Failed to save quote.');
     }
-    setIsDirty(false);
-    alert('Quote saved successfully to database/local history!');
     loadData();
   };
 
