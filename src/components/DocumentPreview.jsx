@@ -149,39 +149,12 @@ export default function DocumentPreview({ quote, settings }) {
             {/* LEFT: Brand block — logo on top, sub-label below, column layout */}
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '6px' }}>
 
-              {/* Logo image (if uploaded) */}
-              {settings.companyLogo && (
-                <img 
-                  src={settings.companyLogo} 
-                  alt="Company Logo"
-                  style={{ height: `${settings.logoHeight || 38}px`, objectFit: 'contain', display: 'block' }}
-                />
-              )}
-
-              {/* Diamond-M fallback (only when no logo) */}
-              {!settings.companyLogo && (
-                <div style={{
-                  width: '34px',
-                  height: '34px',
-                  border: '1.6px solid #E9D6A6',
-                  borderRadius: '4px',
-                  transform: 'rotate(45deg)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0
-                }}>
-                  <span style={{
-                    fontFamily: 'Plus Jakarta Sans, sans-serif',
-                    fontWeight: '800',
-                    fontSize: '14px',
-                    color: '#E9D6A6',
-                    transform: 'rotate(-45deg)',
-                    display: 'block',
-                    lineHeight: 1
-                  }}>M</span>
-                </div>
-              )}
+              {/* Logo image (uploaded or default) */}
+              <img 
+                src={settings.companyLogo || "/quotes_logo.png"} 
+                alt="Company Logo"
+                style={{ height: `${settings.logoHeight || 38}px`, objectFit: 'contain', display: 'block' }}
+              />
 
               {/* Sub-label: directly below logo, left-aligned */}
               <span style={{

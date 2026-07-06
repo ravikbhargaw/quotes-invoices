@@ -528,21 +528,33 @@ export default function Settings({ settings, onSaveSettings, currentUserEmail })
             <div className="space-y-2">
               <label className="input-label">Company Logo</label>
               {localSettings.companyLogo ? (
-                <div className="flex items-center gap-3 bg-zinc-50 p-2 border border-[var(--ui-border)] rounded-lg">
-                  <img src={localSettings.companyLogo} alt="Logo" style={{ height: '32px', objectFit: 'contain' }} />
-                  <button 
-                    type="button" 
-                    onClick={handleResetLogo}
-                    className="text-[10px] text-rose-600 hover:underline font-semibold"
-                  >
-                    Reset to Default SVG
-                  </button>
+                <div className="flex items-center justify-between bg-zinc-50 p-2 border border-[var(--ui-border)] rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <img src={localSettings.companyLogo} alt="Logo" style={{ height: '32px', objectFit: 'contain' }} />
+                    <span className="text-[10px] text-[var(--ui-text-muted)] font-medium">Custom Uploaded Logo</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <button 
+                      type="button" 
+                      onClick={handleResetLogo}
+                      className="text-[10px] text-rose-600 hover:underline font-semibold"
+                    >
+                      Reset to Default
+                    </button>
+                    <label className="text-[10px] text-[var(--ui-accent)] hover:underline font-semibold cursor-pointer">
+                      Upload New
+                      <input type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" />
+                    </label>
+                  </div>
                 </div>
               ) : (
                 <div className="flex items-center justify-between bg-zinc-50 p-2 border border-[var(--ui-border)] rounded-lg">
-                  <span className="text-[10px] text-[var(--ui-text-muted)] font-medium">Using Default SVG Wordmark</span>
+                  <div className="flex items-center gap-3">
+                    <img src="/quotes_logo.png" alt="Logo" style={{ height: '32px', objectFit: 'contain' }} />
+                    <span className="text-[10px] text-[var(--ui-text-muted)] font-medium">Using Default Logo</span>
+                  </div>
                   <label className="text-[10px] text-[var(--ui-accent)] hover:underline font-semibold cursor-pointer">
-                    Upload Logo PNG/JPG
+                    Upload Custom Logo
                     <input type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" />
                   </label>
                 </div>
