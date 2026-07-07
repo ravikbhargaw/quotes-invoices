@@ -229,6 +229,7 @@ export default function App() {
   const [loadingFormAI, setLoadingFormAI] = useState(false);
   const [showPrintTip, setShowPrintTip] = useState(false);
   const [isPrinting, setIsPrinting] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     const handleBeforePrint = () => setIsPrinting(true);
@@ -1378,23 +1379,32 @@ Quote:
 
   // Save current quote draft
   const handleSaveQuoteDraft = async () => {
+    if (isSaving) return;
     if (!activeQuote.client_name.trim()) {
       alert('Billed To (Client Name) is required before saving.');
       return;
     }
-    const saved = await saveQuote(activeQuote);
-    if (saved) {
-      setActiveQuote(saved);
-      setIsDirty(false);
-      if (saved._isLocalFallback) {
-        alert('Warning: Quote saved to local browser cache ONLY (Failed to sync to Supabase cloud database). Check your database connection/credentials.');
+    setIsSaving(true);
+    try {
+      const saved = await saveQuote(activeQuote);
+      if (saved) {
+        setActiveQuote(saved);
+        setIsDirty(false);
+        if (saved._isLocalFallback) {
+          alert('Warning: Quote saved to local browser cache ONLY (Failed to sync to Supabase cloud database). Check your database connection/credentials.');
+        } else {
+          alert('Quote saved successfully to cloud database!');
+        }
       } else {
-        alert('Quote saved successfully to cloud database!');
+        alert('Error: Failed to save quote.');
       }
-    } else {
-      alert('Error: Failed to save quote.');
+      loadData();
+    } catch (e) {
+      console.error('Save failed:', e);
+      alert(`Save failed with error: ${e.message || e}`);
+    } finally {
+      setIsSaving(false);
     }
-    loadData();
   };
 
   // CRUD Client helpers
@@ -1893,10 +1903,11 @@ Quote:
                 </button>
                 <button
                   onClick={handleSaveQuoteDraft}
+                  disabled={isSaving}
                   className="btn"
-                  style={{ width: 'auto' }}
+                  style={{ width: 'auto', opacity: isSaving ? 0.7 : 1 }}
                 >
-                  <Save size={13} /> Save Draft
+                  <Save size={13} /> {isSaving ? 'Saving...' : 'Save Draft'}
                 </button>
               </div>
             </div>
