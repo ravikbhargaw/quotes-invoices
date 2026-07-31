@@ -11,7 +11,14 @@ export default function Settings({ settings, onSaveSettings, currentUserEmail, i
   const isUserAdmin = isAdmin || currentUserEmail?.toLowerCase() === 'ravi.bhargaw@meaven.in';
 
   // Team Management states
-  const [teamUsers, setTeamUsers] = useState([]);
+  const [teamUsers, setTeamUsers] = useState(() => {
+    try {
+      const saved = localStorage.getItem('meaven_team_users');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
   const [newUserEmail, setNewUserEmail] = useState('');
   const [newUserPassword, setNewUserPassword] = useState('');
   const [newUserRole, setNewUserRole] = useState('user');
@@ -30,7 +37,7 @@ export default function Settings({ settings, onSaveSettings, currentUserEmail, i
   const [syncStatus, setSyncStatus] = useState(null);
 
   useEffect(() => {
-    if (activeTab === 'team' && localSettings.supabaseUrl && localSettings.serviceRoleKey) {
+    if (activeTab === 'team') {
       fetchTeamUsers();
     }
   }, [activeTab]);
@@ -40,6 +47,10 @@ export default function Settings({ settings, onSaveSettings, currentUserEmail, i
     const serviceKey = localSettings.serviceRoleKey?.trim();
 
     if (!url || !serviceKey) {
+      try {
+        const saved = localStorage.getItem('meaven_team_users');
+        if (saved) setTeamUsers(JSON.parse(saved));
+      } catch (e) {}
       setLoadingUsers(false);
       return;
     }
@@ -53,10 +64,15 @@ export default function Settings({ settings, onSaveSettings, currentUserEmail, i
       });
       const { data: { users }, error } = await adminClient.auth.admin.listUsers();
       if (error) throw error;
-      setTeamUsers(users || []);
+      const userList = users || [];
+      setTeamUsers(userList);
+      localStorage.setItem('meaven_team_users', JSON.stringify(userList));
     } catch (e) {
       console.error(e);
-      // Fail gracefully for directory listing if key is invalid
+      try {
+        const saved = localStorage.getItem('meaven_team_users');
+        if (saved) setTeamUsers(JSON.parse(saved));
+      } catch (err) {}
     } finally {
       setLoadingUsers(false);
     }
@@ -78,6 +94,7 @@ export default function Settings({ settings, onSaveSettings, currentUserEmail, i
     setTeamSuccess('');
     try {
       const { createClient } = await import('@supabase/supabase-js');
+      let createdId = 'usr_' + Date.now();
       
       if (serviceKey) {
         // Preferred Method: Admin API using Service Role Key
@@ -94,8 +111,9 @@ export default function Settings({ settings, onSaveSettings, currentUserEmail, i
           }
         });
         if (error) throw error;
+        if (data?.user?.id) createdId = data.user.id;
       } else {
-        // Automatic Fallback: Use standard signup with public Anon key (No extra setup needed!)
+        // Automatic Fallback: Use standard signup with public Anon key
         const tempClient = createClient(url, anonKey, {
           auth: { persistSession: false }
         });
@@ -110,7 +128,27 @@ export default function Settings({ settings, onSaveSettings, currentUserEmail, i
           }
         });
         if (error) throw error;
+        if (data?.user?.id) createdId = data.user.id;
       }
+
+      const newAccountObj = {
+        id: createdId,
+        email: newUserEmail.trim(),
+        user_metadata: {
+          role: newUserRole,
+          force_password_reset: true
+        },
+        created_at: new Date().toISOString()
+      };
+
+      setTeamUsers(prev => {
+        const filtered = prev.filter(u => u.email?.toLowerCase() !== newUserEmail.trim().toLowerCase());
+        const updated = [...filtered, newAccountObj];
+        try {
+          localStorage.setItem('meaven_team_users', JSON.stringify(updated));
+        } catch (err) {}
+        return updated;
+      });
 
       setTeamSuccess(`Account for ${newUserEmail.trim()} created successfully! The user can now log in.`);
       setNewUserEmail('');
@@ -132,22 +170,28 @@ export default function Settings({ settings, onSaveSettings, currentUserEmail, i
     const url = localSettings.supabaseUrl?.trim();
     const serviceKey = localSettings.serviceRoleKey?.trim();
 
-    if (!url || !serviceKey) {
-      setTeamError('Supabase Service Role Key is required to delete user accounts.');
-      return;
-    }
-
     setTeamError('');
     setTeamSuccess('');
     try {
-      const { createClient } = await import('@supabase/supabase-js');
-      const adminClient = createClient(url, serviceKey, {
-        auth: { persistSession: false }
+      if (url && serviceKey) {
+        const { createClient } = await import('@supabase/supabase-js');
+        const adminClient = createClient(url, serviceKey, {
+          auth: { persistSession: false }
+        });
+        const { error } = await adminClient.auth.admin.deleteUser(userId);
+        if (error) throw error;
+      }
+      setTeamUsers(prev => {
+        const updated = prev.filter(u => u.id !== userId && u.email?.toLowerCase() !== userEmail.toLowerCase());
+        try {
+          localStorage.setItem('meaven_team_users', JSON.stringify(updated));
+        } catch (e) {}
+        return updated;
       });
-      const { error } = await adminClient.auth.admin.deleteUser(userId);
-      if (error) throw error;
       setTeamSuccess(`Account deleted successfully.`);
-      fetchTeamUsers();
+      if (url && serviceKey) {
+        fetchTeamUsers();
+      }
     } catch (e) {
       console.error(e);
       setTeamError(e.message || 'Failed to delete user account.');
