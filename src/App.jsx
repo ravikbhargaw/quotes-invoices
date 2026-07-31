@@ -296,6 +296,10 @@ export default function App() {
   };
 
   const handleDeleteQuote = async (id) => {
+    if (!isAdmin) {
+      alert('Permission Denied: Only Admin users are authorized to delete quotes.');
+      return;
+    }
     if (confirm('Are you sure you want to delete this quote?')) {
       await deleteQuote(id);
       if (previewQuote && previewQuote.id === id) {

@@ -127,6 +127,7 @@ export default function Dashboard({
               onDuplicate={() => onDuplicateQuote(q)}
               onDelete={() => onDeleteQuote(q.id)}
               onToggleStatus={(quote, newStatus) => onToggleStatus && onToggleStatus(quote, newStatus)}
+              isAdmin={isAdmin}
             />
           ))}
         </div>
@@ -137,7 +138,7 @@ export default function Dashboard({
 }
 
 /* ─── Isolated Quote Card — 100% inline styles, zero CSS conflict ─────────── */
-function QuoteCard({ q, formatDate, previewQuote, onPreview, onEdit, onDuplicate, onDelete, onToggleStatus }) {
+function QuoteCard({ q, formatDate, previewQuote, onPreview, onEdit, onDuplicate, onDelete, onToggleStatus, isAdmin }) {
   const [loadHover, setLoadHover]  = useState(false);
   const [dupHover,  setDupHover]   = useState(false);
   const [delHover,  setDelHover]   = useState(false);
@@ -398,7 +399,7 @@ function QuoteCard({ q, formatDate, previewQuote, onPreview, onEdit, onDuplicate
           style={{
             ...btnBase,
             flex:        1,
-            borderRight: '1px solid #EAE5D8',
+            borderRight: isAdmin ? '1px solid #EAE5D8' : 'none',
             background:  dupHover ? '#FBF6EA' : 'transparent',
             color:       dupHover ? '#8A6417' : '#12213F',
           }}
@@ -407,23 +408,25 @@ function QuoteCard({ q, formatDate, previewQuote, onPreview, onEdit, onDuplicate
           Duplicate
         </button>
 
-        {/* Delete — fixed 40px, icon only */}
-        <button
-          onClick={(e) => { e.stopPropagation(); onDelete(e); }}
-          onMouseEnter={() => setDelHover(true)}
-          onMouseLeave={() => setDelHover(false)}
-          title="Delete Quote"
-          style={{
-            ...btnBase,
-            flex:       'none',
-            width:      '40px',
-            padding:    '7px 0',
-            background: delHover ? '#FBF1EE' : 'transparent',
-            color:      delHover ? '#B4483A' : '#9C8A78',
-          }}
-        >
-          <Trash2 size={13} strokeWidth={2} stroke="currentColor" />
-        </button>
+        {/* Delete — fixed 40px, icon only (Admin Only) */}
+        {isAdmin && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onDelete(e); }}
+            onMouseEnter={() => setDelHover(true)}
+            onMouseLeave={() => setDelHover(false)}
+            title="Delete Quote"
+            style={{
+              ...btnBase,
+              flex:       'none',
+              width:      '40px',
+              padding:    '7px 0',
+              background: delHover ? '#FBF1EE' : 'transparent',
+              color:      delHover ? '#B4483A' : '#9C8A78',
+            }}
+          >
+            <Trash2 size={13} strokeWidth={2} stroke="currentColor" />
+          </button>
+        )}
 
       </div>
     </div>
