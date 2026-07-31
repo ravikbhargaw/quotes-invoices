@@ -736,9 +736,17 @@ export default function Settings({ settings, onSaveSettings, currentUserEmail, i
 
         {activeTab === 'team' && isUserAdmin && (
           <div className="space-y-4">
-            <div>
-              <h3 className="text-xs font-bold text-zinc-800 uppercase tracking-wide">Team Directory Management</h3>
-              <p className="text-[10px] text-[var(--ui-text-muted)] mt-0.5">Manage portal credentials and access privileges for your team.</p>
+            <div className="flex items-center justify-between bg-zinc-900 text-white p-3.5 rounded-xl shadow-sm">
+              <div>
+                <h3 className="text-xs font-bold uppercase tracking-wide text-zinc-100 flex items-center gap-2">
+                  Team Directory Management
+                </h3>
+                <p className="text-[10px] text-zinc-400 mt-0.5">Manage portal credentials and access privileges for your team.</p>
+              </div>
+              <div className="text-right pl-3 border-l border-zinc-700">
+                <span className="text-[8.5px] uppercase tracking-wider text-amber-400 font-bold block">Total Accounts</span>
+                <span className="text-base font-black font-outfit text-white">{teamUsers.length} Users</span>
+              </div>
             </div>
 
             {!localSettings.serviceRoleKey?.trim() && (
@@ -770,14 +778,14 @@ export default function Settings({ settings, onSaveSettings, currentUserEmail, i
               <h4 className="text-[10.5px] font-bold text-zinc-700 uppercase">Create New Team Account</h4>
               <div className="grid grid-cols-2 gap-2">
                 <div className="form-group">
-                  <label className="input-label text-[10px]">Email Address</label>
+                  <label className="input-label text-[10px]">Email Address (Login ID)</label>
                   <input 
                     type="email" 
                     value={newUserEmail} 
                     onChange={(e) => setNewUserEmail(e.target.value)} 
                     placeholder="name@meaven.in" 
                     required 
-                    className="input-field text-xs py-1.5"
+                    className="input-field text-xs py-1.5 font-mono"
                   />
                 </div>
                 <div className="form-group">
@@ -827,36 +835,48 @@ export default function Settings({ settings, onSaveSettings, currentUserEmail, i
               </div>
             </form>
 
-            {/* Users List */}
+            {/* Users List with Login IDs */}
             <div className="space-y-2">
-              <h4 className="text-[10.5px] font-bold text-zinc-700 uppercase">Active Accounts</h4>
+              <div className="flex items-center justify-between">
+                <h4 className="text-[10.5px] font-bold text-zinc-700 uppercase">
+                  Active Team Accounts ({teamUsers.length})
+                </h4>
+                {loadingUsers && <span className="text-[10px] text-zinc-400">Loading...</span>}
+              </div>
+
               {loadingUsers ? (
                 <p className="text-xs text-zinc-400">Loading directory list...</p>
               ) : teamUsers.length === 0 ? (
-                <p className="text-xs text-zinc-400">No other team accounts found.</p>
+                <div className="p-3 border border-zinc-200 border-dashed rounded-lg text-center text-xs text-zinc-400">
+                  No active team accounts listed. Create your first team user using the form above!
+                </div>
               ) : (
-                <div className="border border-zinc-200 divide-y divide-zinc-200 rounded-lg overflow-hidden bg-white">
-                  {teamUsers.map((tu) => (
-                    <div key={tu.id} className="p-3 flex items-center justify-between text-xs hover:bg-zinc-50">
-                      <div>
-                        <strong className="text-zinc-800">{tu.email}</strong>
-                        <div className="flex items-center gap-1.5 mt-0.5">
-                          <span className={`text-[9px] px-1.5 py-0.2 rounded font-bold uppercase ${
-                            tu.user_metadata?.role === 'admin' ? 'bg-indigo-50 border border-indigo-100 text-indigo-700' : 'bg-zinc-100 border border-zinc-200 text-zinc-600'
+                <div className="border border-zinc-200 divide-y divide-zinc-200 rounded-lg overflow-hidden bg-white shadow-sm">
+                  {teamUsers.map((tu, idx) => (
+                    <div key={tu.id || idx} className="p-3 flex items-center justify-between text-xs hover:bg-zinc-50 transition-colors">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-bold text-zinc-400">Login ID:</span>
+                          <strong className="text-zinc-900 font-mono text-xs">{tu.email}</strong>
+                          <span className={`text-[8.5px] px-1.5 py-0.2 rounded font-extrabold uppercase ${
+                            tu.user_metadata?.role === 'admin' || tu.email?.toLowerCase() === 'ravi.bhargaw@meaven.in'
+                              ? 'bg-amber-50 border border-amber-200 text-amber-900' 
+                              : 'bg-zinc-100 border border-zinc-200 text-zinc-600'
                           }`}>
-                            {tu.user_metadata?.role || 'user'}
+                            {tu.email?.toLowerCase() === 'ravi.bhargaw@meaven.in' ? 'Super Admin' : (tu.user_metadata?.role || 'user')}
                           </span>
-                          {tu.user_metadata?.force_password_reset && (
-                            <span className="text-[9px] bg-amber-50 border border-amber-100 text-amber-700 px-1 py-0.2 rounded font-medium">
-                              Pending Reset
-                            </span>
-                          )}
                         </div>
+                        {tu.user_metadata?.force_password_reset && (
+                          <div className="flex items-center gap-1 text-[9px] text-amber-700 font-medium">
+                            <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                            Pending Password Reset on first login
+                          </div>
+                        )}
                       </div>
                       {tu.email?.toLowerCase() !== 'ravi.bhargaw@meaven.in' && (
                         <button 
                           onClick={() => handleDeleteUser(tu.id, tu.email)}
-                          className="p-1 hover:bg-rose-50 text-rose-500 rounded"
+                          className="p-1 hover:bg-rose-50 text-rose-500 rounded border border-transparent hover:border-rose-200 transition-colors"
                           title="Revoke Access"
                         >
                           <Trash2 size={13} />
