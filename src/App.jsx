@@ -2881,6 +2881,7 @@ Quote:
                 onSaveSettings={handleSaveSettingsConfig}
                 onBack={() => setActiveTab('form')}
                 currentUserEmail={userEmail}
+                isAdmin={isAdmin}
               />
             </div>
           </div>

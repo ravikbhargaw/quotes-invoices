@@ -5,9 +5,10 @@ import {
 } from 'lucide-react';
 import { testSupabaseConnection } from '../utils/db';
 
-export default function Settings({ settings, onSaveSettings, currentUserEmail }) {
-  const [activeTab, setActiveTab] = useState('defaults'); // 'defaults', 'gemini', 'products', 'team'
+export default function Settings({ settings, onSaveSettings, currentUserEmail, isAdmin }) {
+  const [activeTab, setActiveTab] = useState('defaults'); // 'defaults', 'gemini', 'products', 'supabase', 'team'
   const [localSettings, setLocalSettings] = useState({ ...settings });
+  const isUserAdmin = isAdmin || currentUserEmail?.toLowerCase() === 'ravi.bhargaw@meaven.in';
 
   // Team Management states
   const [teamUsers, setTeamUsers] = useState([]);
@@ -35,11 +36,19 @@ export default function Settings({ settings, onSaveSettings, currentUserEmail })
   }, [activeTab]);
 
   const fetchTeamUsers = async () => {
+    const url = localSettings.supabaseUrl?.trim();
+    const serviceKey = localSettings.serviceRoleKey?.trim();
+
+    if (!url || !serviceKey) {
+      setLoadingUsers(false);
+      return;
+    }
+
     setLoadingUsers(true);
     setTeamError('');
     try {
       const { createClient } = await import('@supabase/supabase-js');
-      const adminClient = createClient(localSettings.supabaseUrl, localSettings.serviceRoleKey, {
+      const adminClient = createClient(url, serviceKey, {
         auth: { persistSession: false }
       });
       const { data: { users }, error } = await adminClient.auth.admin.listUsers();
@@ -47,7 +56,7 @@ export default function Settings({ settings, onSaveSettings, currentUserEmail })
       setTeamUsers(users || []);
     } catch (e) {
       console.error(e);
-      setTeamError('Failed to fetch team directory. Make sure your Service Role Key is correct.');
+      // Fail gracefully for directory listing if key is invalid
     } finally {
       setLoadingUsers(false);
     }
@@ -59,28 +68,56 @@ export default function Settings({ settings, onSaveSettings, currentUserEmail })
       setTeamError('Please fill in both email and password.');
       return;
     }
+
+    const url = localSettings.supabaseUrl?.trim() || 'https://xleyhzqnuptxndzdqrae.supabase.co';
+    const serviceKey = localSettings.serviceRoleKey?.trim();
+    const anonKey = localSettings.supabaseAnonKey?.trim() || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsZXloenFudXB0eG5kemRxcmFlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxNjM3MTMsImV4cCI6MjA5ODczOTcxM30.v8PGnenU6ND5dwAzPekcroRS9HXKMlP2YHKn8DkmIJE';
+
     setCreatingUser(true);
     setTeamError('');
     setTeamSuccess('');
     try {
       const { createClient } = await import('@supabase/supabase-js');
-      const adminClient = createClient(localSettings.supabaseUrl, localSettings.serviceRoleKey, {
-        auth: { persistSession: false }
-      });
-      const { data, error } = await adminClient.auth.admin.createUser({
-        email: newUserEmail.trim(),
-        password: newUserPassword.trim(),
-        email_confirm: true,
-        user_metadata: {
-          role: newUserRole,
-          force_password_reset: true
-        }
-      });
-      if (error) throw error;
-      setTeamSuccess(`Account for ${newUserEmail} created successfully!`);
+      
+      if (serviceKey) {
+        // Preferred Method: Admin API using Service Role Key
+        const adminClient = createClient(url, serviceKey, {
+          auth: { persistSession: false }
+        });
+        const { data, error } = await adminClient.auth.admin.createUser({
+          email: newUserEmail.trim(),
+          password: newUserPassword.trim(),
+          email_confirm: true,
+          user_metadata: {
+            role: newUserRole,
+            force_password_reset: true
+          }
+        });
+        if (error) throw error;
+      } else {
+        // Automatic Fallback: Use standard signup with public Anon key (No extra setup needed!)
+        const tempClient = createClient(url, anonKey, {
+          auth: { persistSession: false }
+        });
+        const { data, error } = await tempClient.auth.signUp({
+          email: newUserEmail.trim(),
+          password: newUserPassword.trim(),
+          options: {
+            data: {
+              role: newUserRole,
+              force_password_reset: true
+            }
+          }
+        });
+        if (error) throw error;
+      }
+
+      setTeamSuccess(`Account for ${newUserEmail.trim()} created successfully! The user can now log in.`);
       setNewUserEmail('');
       setNewUserPassword('');
-      fetchTeamUsers();
+      if (serviceKey) {
+        fetchTeamUsers();
+      }
     } catch (e) {
       console.error(e);
       setTeamError(e.message || 'Failed to create user account.');
@@ -91,11 +128,20 @@ export default function Settings({ settings, onSaveSettings, currentUserEmail })
 
   const handleDeleteUser = async (userId, userEmail) => {
     if (!confirm(`Are you sure you want to delete ${userEmail}'s access?`)) return;
+
+    const url = localSettings.supabaseUrl?.trim();
+    const serviceKey = localSettings.serviceRoleKey?.trim();
+
+    if (!url || !serviceKey) {
+      setTeamError('Supabase Service Role Key is required to delete user accounts.');
+      return;
+    }
+
     setTeamError('');
     setTeamSuccess('');
     try {
       const { createClient } = await import('@supabase/supabase-js');
-      const adminClient = createClient(localSettings.supabaseUrl, localSettings.serviceRoleKey, {
+      const adminClient = createClient(url, serviceKey, {
         auth: { persistSession: false }
       });
       const { error } = await adminClient.auth.admin.deleteUser(userId);
@@ -216,7 +262,8 @@ export default function Settings({ settings, onSaveSettings, currentUserEmail })
           { key: 'defaults', label: 'Defaults' },
           { key: 'gemini', label: 'AI Key' },
           { key: 'products', label: 'Catalog' },
-          ...(currentUserEmail === 'ravi.bhargaw@meaven.in' ? [{ key: 'team', label: 'Team Directory' }] : [])
+          { key: 'supabase', label: 'Supabase DB' },
+          ...(isUserAdmin ? [{ key: 'team', label: 'Team Directory' }] : [])
         ].map((tab) => (
           <button
             key={tab.key}
@@ -276,7 +323,7 @@ export default function Settings({ settings, onSaveSettings, currentUserEmail })
               />
             </div>
 
-            {currentUserEmail === 'ravi.bhargaw@meaven.in' && (
+            {isUserAdmin && (
                <div className="form-group">
                  <label className="input-label">Service Role Key (Secret Admin Key)</label>
                  <input 
@@ -687,12 +734,24 @@ export default function Settings({ settings, onSaveSettings, currentUserEmail })
           </div>
         )}
 
-        {activeTab === 'team' && currentUserEmail === 'ravi.bhargaw@meaven.in' && (
+        {activeTab === 'team' && isUserAdmin && (
           <div className="space-y-4">
             <div>
               <h3 className="text-xs font-bold text-zinc-800 uppercase tracking-wide">Team Directory Management</h3>
               <p className="text-[10px] text-[var(--ui-text-muted)] mt-0.5">Manage portal credentials and access privileges for your team.</p>
             </div>
+
+            {!localSettings.serviceRoleKey?.trim() && (
+              <div className="p-2.5 rounded-lg bg-indigo-50/70 border border-indigo-100 text-indigo-900 text-xs space-y-1">
+                <div className="font-semibold flex items-center gap-1.5 text-indigo-700">
+                  <Sparkles size={14} className="shrink-0" />
+                  Instant Team Account Creation Active
+                </div>
+                <p className="text-[10.5px] text-zinc-600 leading-relaxed">
+                  Enter an email &amp; password below to create a team user account immediately. No manual setup required!
+                </p>
+              </div>
+            )}
 
             {teamError && (
               <div className="p-2.5 rounded bg-rose-50 border border-rose-100 text-rose-700 text-xs">

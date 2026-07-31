@@ -17,6 +17,7 @@ const DEFAULT_SETTINGS = {
   selectedModel: 'gemini-2.5-flash',
   supabaseUrl: 'https://xleyhzqnuptxndzdqrae.supabase.co',
   supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsZXloenFudXB0eG5kemRxcmFlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxNjM3MTMsImV4cCI6MjA5ODczOTcxM30.v8PGnenU6ND5dwAzPekcroRS9HXKMlP2YHKn8DkmIJE',
+  serviceRoleKey: '',
   companyLogo: null, // Base64 image
   bankDetails: {
     name: 'MEAVEN DESIGNS PRIVATE LIMITED',
