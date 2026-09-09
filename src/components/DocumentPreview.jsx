@@ -533,13 +533,28 @@ export default function DocumentPreview({ quote, settings }) {
                   {/* Rate */}
                   <div style={{ whiteSpace: 'nowrap' }}>
                     {itemDiscount > 0 ? (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', alignItems: 'flex-end' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', alignItems: 'flex-end' }}>
                         <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '9px', color: colors.inkSoft, textDecoration: 'line-through' }}>
                           ₹{Math.round(item.rate || 0).toLocaleString('en-IN')}
                         </span>
-                        <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '11.5px', color: colors.proposed, fontWeight: '600' }}>
-                          ₹{Math.round(item.rate * (1 - itemDiscount / 100)).toLocaleString('en-IN')}
-                        </span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <span style={{ 
+                            fontSize: '8.5px', 
+                            fontWeight: '700', 
+                            color: '#047857', 
+                            background: '#ECFDF5', 
+                            border: '1px solid #A7F3D0', 
+                            borderRadius: '3px', 
+                            padding: '0 4px', 
+                            lineHeight: '14px',
+                            fontFamily: 'Inter, sans-serif'
+                          }}>
+                            {itemDiscount}% OFF
+                          </span>
+                          <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '11.5px', color: colors.proposed, fontWeight: '700' }}>
+                            ₹{Math.round(item.rate * (1 - itemDiscount / 100)).toLocaleString('en-IN')}
+                          </span>
+                        </div>
                       </div>
                     ) : (
                       <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '11.5px', color: colors.ink }}>

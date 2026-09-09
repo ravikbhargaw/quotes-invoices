@@ -712,14 +712,14 @@ Output ONLY raw JSON matching this format (no markdown code fences):
                 </div>
                 <div>
                   <label className="block text-[10px] font-bold uppercase tracking-wider text-[var(--ui-text-muted)] mb-1">
-                    Reference / Project
+                    Subject / Purpose of Quote
                   </label>
                   <input 
                     type="text"
                     value={quote.reference || ''}
                     onChange={(e) => updateField('reference', e.target.value)}
                     className="w-full bg-[var(--ui-bg)] border border-[var(--ui-border)] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[var(--ui-accent)]"
-                    placeholder="HSR Site Villa"
+                    placeholder="e.g. Hardware Only, Full Service Glazing"
                   />
                 </div>
               </div>

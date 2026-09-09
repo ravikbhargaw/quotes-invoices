@@ -271,7 +271,7 @@ function QuoteCard({ q, formatDate, previewQuote, onPreview, onEdit, onDuplicate
       </div>
 
       {/* ── Row 2: Customer name (left, truncating) + Date (right, no-wrap) ── */}
-      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '10px', marginBottom: '12px' }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '10px', marginBottom: '8px' }}>
         <div style={{
           fontFamily:    'Plus Jakarta Sans, sans-serif',
           fontWeight:     700,
@@ -290,6 +290,29 @@ function QuoteCard({ q, formatDate, previewQuote, onPreview, onEdit, onDuplicate
           <span style={{ color: '#12213F', fontWeight: 600 }}>{formatDate(q.date)}</span>
         </div>
       </div>
+
+      {/* ── Row 2.5: Subject / Purpose Badge if present ───────────────────── */}
+      {q.reference && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+          padding: '4px 9px',
+          background: 'rgba(185, 138, 46, 0.08)',
+          border: '1px solid rgba(185, 138, 46, 0.22)',
+          borderRadius: '6px',
+          marginBottom: '12px',
+          fontSize: '11px',
+          color: '#8A6417',
+          fontWeight: 600,
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis'
+        }}>
+          <span style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px', color: '#B98A2E', fontWeight: 800 }}>Subject:</span>
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', color: '#12213F', fontWeight: 600 }}>{q.reference}</span>
+        </div>
+      )}
 
       {/* ── Fade-edge divider ───────────────────────────────────────────────── */}
       <div style={{

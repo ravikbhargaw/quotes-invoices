@@ -2229,12 +2229,12 @@ Quote:
                     />
                   </div>
                   <div className="form-group mb-0">
-                    <label className="input-label">Project Reference</label>
+                    <label className="input-label">Subject / Purpose of Quote</label>
                     <input 
                       type="text"
                       value={activeQuote.reference || ''}
                       onChange={(e) => updateQuoteField('reference', e.target.value)}
-                      placeholder="e.g. HSR Office Site"
+                      placeholder="e.g. Hardware Only, Full Execution, Phase 1"
                       className="input-field"
                     />
                   </div>
