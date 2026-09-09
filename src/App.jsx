@@ -578,13 +578,56 @@ Quote:
     return dateStr;
   };
 
+  // Helper to resolve active model & key with smart fallback across all providers
+  const resolveAIModelAndKey = (currentSettings = settings) => {
+    const selectedModel = currentSettings.selectedModel || 'gemini-2.5-flash';
+    
+    const getProvider = (model) => {
+      if (model.startsWith('gemini')) return 'gemini';
+      if (model.startsWith('gpt') || model.startsWith('o1') || model.startsWith('o3')) return 'openai';
+      if (model.startsWith('claude')) return 'anthropic';
+      if (model.startsWith('grok')) return 'xai';
+      return 'gemini';
+    };
+
+    const getKeyForProvider = (provider) => {
+      if (provider === 'gemini') return currentSettings.geminiApiKey?.trim();
+      if (provider === 'openai') return currentSettings.openaiApiKey?.trim();
+      if (provider === 'anthropic') return currentSettings.anthropicApiKey?.trim();
+      if (provider === 'xai') return currentSettings.xaiApiKey?.trim();
+      return null;
+    };
+
+    const targetProvider = getProvider(selectedModel);
+    const targetKey = getKeyForProvider(targetProvider);
+
+    if (targetKey) {
+      return { model: selectedModel, provider: targetProvider, key: targetKey, autoSwitched: false };
+    }
+
+    // Smart Fallback: check if ANY provider key is configured
+    if (currentSettings.geminiApiKey?.trim()) {
+      return { model: 'gemini-2.5-flash', provider: 'gemini', key: currentSettings.geminiApiKey.trim(), autoSwitched: true, originalModel: selectedModel };
+    }
+    if (currentSettings.openaiApiKey?.trim()) {
+      return { model: 'gpt-4o', provider: 'openai', key: currentSettings.openaiApiKey.trim(), autoSwitched: true, originalModel: selectedModel };
+    }
+    if (currentSettings.anthropicApiKey?.trim()) {
+      return { model: 'claude-3-7-sonnet-20250219', provider: 'anthropic', key: currentSettings.anthropicApiKey.trim(), autoSwitched: true, originalModel: selectedModel };
+    }
+    if (currentSettings.xaiApiKey?.trim()) {
+      return { model: 'grok-3', provider: 'xai', key: currentSettings.xaiApiKey.trim(), autoSwitched: true, originalModel: selectedModel };
+    }
+
+    return { model: selectedModel, provider: targetProvider, key: null, autoSwitched: false };
+  };
+
   // Shared Helper for calling AI for plain text generation
   const generateTextWithAI = async (prompt, systemPrompt = "You are a professional assistant.") => {
-    const selectedModel = settings.selectedModel || 'gemini-2.5-flash';
+    const { model: selectedModel, provider, key } = resolveAIModelAndKey(settings);
+    if (!key) throw new Error("No AI API Key found. Please add your key in Settings → AI Key.");
     
-    if (selectedModel.startsWith('gemini')) {
-      const key = settings.geminiApiKey?.trim();
-      if (!key) throw new Error("No Gemini API Key found. Please add it in Settings.");
+    if (provider === 'gemini') {
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${key}`;
       const response = await fetch(url, {
         method: 'POST',
@@ -603,10 +646,53 @@ Quote:
       return data.candidates[0].content.parts[0].text.trim();
     }
     
-    if (selectedModel.startsWith('gpt')) {
-      const key = settings.openaiApiKey?.trim();
-      if (!key) throw new Error("No OpenAI API Key found. Please add it in Settings.");
+    if (provider === 'openai') {
       const url = 'https://api.openai.com/v1/chat/completions';
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${key}`
+        },
+        body: JSON.stringify({
+          model: selectedModel,
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: prompt }
+          ]
+        })
+      });
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      const data = await response.json();
+      return data.choices[0].message.content.trim();
+    }
+
+    if (provider === 'anthropic') {
+      const url = 'https://api.anthropic.com/v1/messages';
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'x-api-key': key,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+          model: selectedModel,
+          max_tokens: 1000,
+          system: systemPrompt,
+          messages: [
+            { role: 'user', content: prompt }
+          ]
+        })
+      });
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      const data = await response.json();
+      return data.content[0].text.trim();
+    }
+
+    if (provider === 'xai') {
+      const url = 'https://api.x.ai/v1/chat/completions';
       const response = await fetch(url, {
         method: 'POST',
         headers: {
@@ -678,17 +764,19 @@ Quote:
     if (!aiPrompt.trim()) return;
     setLoadingAI(true);
     
-    const selectedModel = settings.selectedModel || 'gemini-2.5-flash';
-    const systemPrompt = GEMINI_SYSTEM_PROMPT;
+    const { model: selectedModel, provider, key, autoSwitched, originalModel } = resolveAIModelAndKey(settings);
+    if (!key) {
+      alert(`AI Live API failed: No API Key found for Gemini, OpenAI, Anthropic, or xAI. Falling back to simulator mode. Please add your key in Settings → AI Key.`);
+      simulateAI(aiPrompt);
+      setLoadingAI(false);
+      return;
+    }
 
+    const systemPrompt = GEMINI_SYSTEM_PROMPT;
     let parsed = null;
 
     try {
-      if (selectedModel.startsWith('gemini')) {
-        const key = settings.geminiApiKey?.trim();
-        if (!key) {
-          throw new Error("No Gemini API Key found. Please add it in Settings → AI Key.");
-        }
+      if (provider === 'gemini') {
         const url = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${key}`;
         const response = await fetch(url, {
           method: 'POST',
@@ -713,11 +801,7 @@ Quote:
         const jsonText = data.candidates[0].content.parts[0].text;
         parsed = cleanAndParseJSON(jsonText);
       } 
-      else if (selectedModel.startsWith('gpt')) {
-        const key = settings.openaiApiKey?.trim();
-        if (!key) {
-          throw new Error("No OpenAI API Key found. Please add it in Settings → AI Key.");
-        }
+      else if (provider === 'openai') {
         const url = 'https://api.openai.com/v1/chat/completions';
         const response = await fetch(url, {
           method: 'POST',
@@ -744,11 +828,7 @@ Quote:
         const jsonText = data.choices[0].message.content;
         parsed = cleanAndParseJSON(jsonText);
       }
-      else if (selectedModel.startsWith('claude')) {
-        const key = settings.anthropicApiKey?.trim();
-        if (!key) {
-          throw new Error("No Anthropic API Key found. Please add it in Settings → AI Key.");
-        }
+      else if (provider === 'anthropic') {
         const url = 'https://api.anthropic.com/v1/messages';
         const response = await fetch(url, {
           method: 'POST',
@@ -777,11 +857,7 @@ Quote:
         const jsonText = data.content[0].text;
         parsed = cleanAndParseJSON(jsonText);
       }
-      else if (selectedModel.startsWith('grok')) {
-        const key = settings.xaiApiKey?.trim();
-        if (!key) {
-          throw new Error("No xAI (Grok) API Key found. Please add it in Settings → AI Key.");
-        }
+      else if (provider === 'xai') {
         const url = 'https://api.x.ai/v1/chat/completions';
         const response = await fetch(url, {
           method: 'POST',
@@ -811,7 +887,8 @@ Quote:
 
       if (parsed) {
         handleParsedAIQuote(parsed);
-        alert(`AI generated quote successfully parsed using ${selectedModel}! Review details in the card.`);
+        const switchMsg = autoSwitched ? ` (Auto-switched to available model ${selectedModel} from ${originalModel})` : '';
+        alert(`AI generated quote successfully parsed using ${selectedModel}${switchMsg}! Review details in the card.`);
       } else {
         throw new Error("Empty response received from AI model.");
       }
@@ -1145,14 +1222,16 @@ Quote:
     if (!aiPrompt.trim()) return;
     setLoadingFormAI(true);
     
-    const selectedModel = settings.selectedModel || 'gemini-2.5-flash';
+    const { model: selectedModel, provider, key, autoSwitched, originalModel } = resolveAIModelAndKey(settings);
     const systemPrompt = GEMINI_SYSTEM_PROMPT;
     let parsed = null;
 
     try {
-      if (selectedModel.startsWith('gemini')) {
-        const key = settings.geminiApiKey?.trim();
-        if (!key) throw new Error("No Gemini API Key found. Please add it in Settings.");
+      if (!key) {
+        throw new Error("No API Key found for Gemini, OpenAI, Anthropic, or xAI. Please add your key in Settings → AI Key.");
+      }
+
+      if (provider === 'gemini') {
         const url = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${key}`;
         const response = await fetch(url, {
           method: 'POST',
@@ -1177,9 +1256,7 @@ Quote:
         const jsonText = data.candidates[0].content.parts[0].text;
         parsed = cleanAndParseJSON(jsonText);
       } 
-      else if (selectedModel.startsWith('gpt')) {
-        const key = settings.openaiApiKey?.trim();
-        if (!key) throw new Error("No OpenAI API Key found. Please add it in Settings.");
+      else if (provider === 'openai') {
         const url = 'https://api.openai.com/v1/chat/completions';
         const response = await fetch(url, {
           method: 'POST',
@@ -1206,9 +1283,7 @@ Quote:
         const jsonText = data.choices[0].message.content;
         parsed = cleanAndParseJSON(jsonText);
       }
-      else if (selectedModel.startsWith('claude')) {
-        const key = settings.anthropicApiKey?.trim();
-        if (!key) throw new Error("No Anthropic API Key found. Please add it in Settings.");
+      else if (provider === 'anthropic') {
         const url = 'https://api.anthropic.com/v1/messages';
         const response = await fetch(url, {
           method: 'POST',
@@ -1237,9 +1312,7 @@ Quote:
         const jsonText = data.content[0].text;
         parsed = cleanAndParseJSON(jsonText);
       }
-      else if (selectedModel.startsWith('grok')) {
-        const key = settings.xaiApiKey?.trim();
-        if (!key) throw new Error("No xAI (Grok) API Key found. Please add it in Settings.");
+      else if (provider === 'xai') {
         const url = 'https://api.x.ai/v1/chat/completions';
         const response = await fetch(url, {
           method: 'POST',
@@ -1281,11 +1354,11 @@ Quote:
           items: (parsed.items || []).map(item => ({
             name: item.name || '',
             desc: item.desc || item.description || '',
-            qty: parseFloat(item.qty) || 1,
+            qty: parseFloat(item.qty) || 0,
             unit: item.unit || 'sqft',
             rate: parseFloat(item.rate) || 0,
             discount: parseFloat(item.discount) || 0,
-            specs: item.specs || item.tags || [],
+            specs: item.specs || [],
             sizes: item.sizes || [],
             client_spec: item.client_spec || '',
             proposed_spec: item.proposed_spec || item.our_offer || '',
@@ -1293,14 +1366,20 @@ Quote:
           })),
           payment_schedule: (parsed.payment_schedule && parsed.payment_schedule.length > 0) ? parsed.payment_schedule : (parsed.paymentSchedule && parsed.paymentSchedule.length > 0) ? parsed.paymentSchedule : [...settings.paymentSchedule],
           timeline_steps: (parsed.timeline_steps && parsed.timeline_steps.length > 0) ? parsed.timeline_steps : (parsed.timelineSteps && parsed.timelineSteps.length > 0) ? parsed.timelineSteps : [...settings.timelineSteps],
-          notes: parsed.notes || [...settings.notes],
-          terms: parsed.terms || [...settings.terms],
+          notes: [...settings.notes],
+          terms: [...settings.terms],
           adjustment: parseFloat(parsed.adjustment) || 0
         };
 
-        // Auto-generate summaries via AI
-        const key = settings.geminiApiKey?.trim() || settings.openaiApiKey?.trim();
-        if (key) {
+        // Calculate subtotal, tax, total
+        const gross = computedQuote.items.reduce((sum, i) => sum + (i.qty * i.rate * (1 - (i.discount / 100))), 0);
+        computedQuote.subtotal = gross + computedQuote.adjustment;
+        computedQuote.tax = computedQuote.subtotal * 0.18;
+        computedQuote.total = computedQuote.subtotal + computedQuote.tax;
+
+        // Auto-generate Executive Summary & Upgrade Summaries via AI if keys are present
+        const hasAnyKey = settings.geminiApiKey?.trim() || settings.openaiApiKey?.trim() || settings.anthropicApiKey?.trim() || settings.xaiApiKey?.trim();
+        if (hasAnyKey) {
           try {
             const itemsList = computedQuote.items.map(item => `- ${item.name}: ${item.qty} ${item.unit} (${item.specs?.join(', ') || ''})`).join('\n');
             const summaryPrompt = `Generate a professional executive summary (2-4 sentences) for meaven.in. Scope of work items:\n${itemsList}\nDo not mention any prices.`;
@@ -1318,7 +1397,7 @@ Quote:
                 const upSystem = "You are a structural glass engineer for meaven.in. Return ONLY one short sentence (max 12 words) explaining the practical benefit of Meaven's proposed spec. Example: 'Upgraded to Saint-Gobain toughened glass for superior load resistance.'";
                 return generateTextWithAI(upPrompt, upSystem)
                   .then(res => { item.upgrade_summary = res; })
-                  .catch(e => console.error('Failed to auto-generate upgrade summary for item ' + idx, e));
+                  .catch(e => console.error(`Failed auto upgrade summary for item ${idx}`, e));
               }
               return Promise.resolve();
             });
@@ -1332,7 +1411,8 @@ Quote:
         setActiveQuote(computedQuote);
         setIsDirty(true);
         setShowFormAiPrompt(false);
-        alert('AI Quote parsed and loaded successfully!');
+        const switchMsg = autoSwitched ? ` (Auto-switched to available model ${selectedModel} from ${originalModel})` : '';
+        alert(`AI Quote parsed and loaded successfully using ${selectedModel}${switchMsg}!`);
       } else {
         throw new Error("Empty response received from AI model.");
       }
@@ -1423,12 +1503,12 @@ Quote:
   };
 
   // Settings save handler
-  const handleSaveSettingsConfig = (newSettings) => {
-    saveSettings(newSettings);
+  const handleSaveSettingsConfig = async (newSettings) => {
+    await saveSettings(newSettings);
     setSettings(newSettings);
     const supabase = getSupabase();
     setDbConnected(!!supabase);
-    loadData();
+    await loadData();
   };
 
   const handleLogoUpload = (e) => {
@@ -1842,24 +1922,29 @@ Quote:
                     style={{ padding: '6px 10px', fontSize: '12px' }}
                   >
                     <optgroup label="Google Gemini">
-                      <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                      <option value="gemini-2.5-flash">Gemini 2.5 Flash (Recommended)</option>
                       <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+                      <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
                       <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
                       <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
                     </optgroup>
                     <optgroup label="OpenAI">
-                      <option value="gpt-4o">GPT-4o (OpenAI)</option>
-                      <option value="gpt-4o-mini">GPT-4o Mini (OpenAI)</option>
+                      <option value="gpt-4o">GPT-4o (OpenAI Flagship)</option>
+                      <option value="gpt-4o-mini">GPT-4o Mini (OpenAI Fast)</option>
+                      <option value="o3-mini">o3-mini (OpenAI Reasoning)</option>
+                      <option value="o1">o1 (OpenAI High Reasoning)</option>
                     </optgroup>
                     <optgroup label="Anthropic Claude">
-                      <option value="claude-3-5-sonnet-latest">Claude 3.5 Sonnet</option>
-                      <option value="claude-haiku-4-5">Claude 4.5 Haiku</option>
+                      <option value="claude-3-7-sonnet-20250219">Claude 3.7 Sonnet (Hybrid Reasoning)</option>
+                      <option value="claude-3-5-sonnet-20241022">Claude 3.5 Sonnet</option>
+                      <option value="claude-3-5-haiku-20241022">Claude 3.5 Haiku</option>
+                      <option value="claude-3-opus-20240229">Claude 3 Opus</option>
                     </optgroup>
                     <optgroup label="xAI Grok">
+                      <option value="grok-3">Grok 3 (xAI Flagship)</option>
+                      <option value="grok-3-mini">Grok 3 Mini</option>
                       <option value="grok-2-1212">Grok 2</option>
                       <option value="grok-beta">Grok Beta</option>
-                      <option value="grok-4.1-fast">Grok 4.1 Fast</option>
-                      <option value="grok-4.3">Grok 4.3</option>
                     </optgroup>
                   </select>
                 </div>

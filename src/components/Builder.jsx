@@ -196,6 +196,7 @@ Apply a discount adjustment of -18025. Payment is 50% advance, 45% dispatch, 5% 
   };
 
   // AI Prompt Parsing Handler
+  // AI Prompt Parsing Handler
   const handleGenerateAI = async () => {
     if (!aiPrompt.trim()) {
       alert('Please enter a description first.');
@@ -203,15 +204,41 @@ Apply a discount adjustment of -18025. Payment is 50% advance, 45% dispatch, 5% 
     }
 
     setLoadingAI(true);
-    const key = settings.geminiApiKey?.trim();
+    
+    // Resolve key and provider
+    const selectedModel = settings.selectedModel || 'gemini-2.5-flash';
+    const getProvider = (model) => {
+      if (model.startsWith('gemini')) return 'gemini';
+      if (model.startsWith('gpt') || model.startsWith('o1') || model.startsWith('o3')) return 'openai';
+      if (model.startsWith('claude')) return 'anthropic';
+      if (model.startsWith('grok')) return 'xai';
+      return 'gemini';
+    };
+    const getKeyForProvider = (provider) => {
+      if (provider === 'gemini') return settings.geminiApiKey?.trim();
+      if (provider === 'openai') return settings.openaiApiKey?.trim();
+      if (provider === 'anthropic') return settings.anthropicApiKey?.trim();
+      if (provider === 'xai') return settings.xaiApiKey?.trim();
+      return null;
+    };
+
+    let targetProvider = getProvider(selectedModel);
+    let key = getKeyForProvider(targetProvider);
+    let activeModel = selectedModel;
+    let autoSwitched = false;
+
+    if (!key) {
+      if (settings.geminiApiKey?.trim()) { activeModel = 'gemini-2.5-flash'; targetProvider = 'gemini'; key = settings.geminiApiKey.trim(); autoSwitched = true; }
+      else if (settings.openaiApiKey?.trim()) { activeModel = 'gpt-4o'; targetProvider = 'openai'; key = settings.openaiApiKey.trim(); autoSwitched = true; }
+      else if (settings.anthropicApiKey?.trim()) { activeModel = 'claude-3-7-sonnet-20250219'; targetProvider = 'anthropic'; key = settings.anthropicApiKey.trim(); autoSwitched = true; }
+      else if (settings.xaiApiKey?.trim()) { activeModel = 'grok-3'; targetProvider = 'xai'; key = settings.xaiApiKey.trim(); autoSwitched = true; }
+    }
 
     if (key) {
-      // LIVE GEMINI API MODE
       try {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`;
         const systemPrompt = `You are a structured parser for Meaven Designs, a glass solution company. 
 Your job is to read a raw quote description or request text, and output a clean JSON object representing the quote.
-Output ONLY raw JSON matching this format (no markdown code fences like \`\`\`json):
+Output ONLY raw JSON matching this format (no markdown code fences):
 {
   "client_name": "...",
   "gstin": "...",
@@ -238,46 +265,97 @@ Output ONLY raw JSON matching this format (no markdown code fences like \`\`\`js
   ]
 }`;
 
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{
-              parts: [
-                { text: systemPrompt },
-                { text: "Parse this request: " + aiPrompt }
-              ]
-            }],
-            generationConfig: {
-              responseMimeType: "application/json"
-            }
-          })
-        });
+        let parsed = null;
 
-        const data = await response.json();
-        const jsonText = data.candidates[0].content.parts[0].text;
-        const parsed = JSON.parse(jsonText);
+        if (targetProvider === 'gemini') {
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/${activeModel}:generateContent?key=${key}`;
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{
+                parts: [{ text: systemPrompt }, { text: "Parse this request: " + aiPrompt }]
+              }],
+              generationConfig: { responseMimeType: "application/json" }
+            })
+          });
+          const data = await response.json();
+          const jsonText = data.candidates[0].content.parts[0].text;
+          parsed = JSON.parse(jsonText.replace(/^```[a-zA-Z]*\s*/, '').replace(/\s*```$/, ''));
+        }
+        else if (targetProvider === 'openai') {
+          const url = 'https://api.openai.com/v1/chat/completions';
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+            body: JSON.stringify({
+              model: activeModel,
+              messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: "Parse this request: " + aiPrompt }],
+              response_format: { type: "json_object" }
+            })
+          });
+          const data = await response.json();
+          parsed = JSON.parse(data.choices[0].message.content);
+        }
+        else if (targetProvider === 'anthropic') {
+          const url = 'https://api.anthropic.com/v1/messages';
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'content-type': 'application/json',
+              'x-api-key': key,
+              'anthropic-version': '2023-06-01',
+              'anthropic-dangerous-direct-browser-access': 'true'
+            },
+            body: JSON.stringify({
+              model: activeModel,
+              max_tokens: 4000,
+              system: systemPrompt,
+              messages: [{ role: 'user', content: "Parse this request: " + aiPrompt }]
+            })
+          });
+          const data = await response.json();
+          parsed = JSON.parse(data.content[0].text.replace(/^```[a-zA-Z]*\s*/, '').replace(/\s*```$/, ''));
+        }
+        else if (targetProvider === 'xai') {
+          const url = 'https://api.x.ai/v1/chat/completions';
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+            body: JSON.stringify({
+              model: activeModel,
+              messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: "Parse this request: " + aiPrompt }],
+              response_format: { type: "json_object" }
+            })
+          });
+          const data = await response.json();
+          parsed = JSON.parse(data.choices[0].message.content);
+        }
 
-        // Load into state
-        setQuote(prev => ({
-          ...prev,
-          client_name: parsed.client_name || prev.client_name,
-          gstin: parsed.gstin || prev.gstin,
-          quote_number: parsed.estimate_no || prev.quote_number,
-          date: parsed.date || prev.date,
-          validity: parsed.validity || prev.validity,
-          reference: parsed.reference || prev.reference,
-          adjustment: parsed.adjustment || 0,
-          format: parsed.format || prev.format,
-          items: parsed.items || [],
-          payment_schedule: parsed.paymentSchedule || prev.payment_schedule
-        }));
+        if (parsed) {
+          setQuote(prev => ({
+            ...prev,
+            client_name: parsed.client_name || prev.client_name,
+            gstin: parsed.gstin || prev.gstin,
+            quote_number: parsed.estimate_no || prev.quote_number,
+            date: parsed.date || prev.date,
+            validity: parsed.validity || prev.validity,
+            reference: parsed.reference || prev.reference,
+            adjustment: parsed.adjustment || 0,
+            format: parsed.format || prev.format,
+            items: parsed.items || [],
+            payment_schedule: parsed.paymentSchedule || prev.payment_schedule
+          }));
 
-        setActiveTab('manual');
-        alert('AI successfully loaded quote details!');
+          setActiveTab('manual');
+          const switchMsg = autoSwitched ? ` (Auto-switched to available model ${activeModel})` : '';
+          alert(`AI successfully loaded quote details using ${activeModel}${switchMsg}!`);
+        } else {
+          throw new Error("Empty response received");
+        }
       } catch (err) {
-        console.error('Gemini API call failed, using simulator:', err);
-        alert('Gemini Live API failed. Falling back to Local Simulator Mode.');
+        console.error('API call failed, using simulator:', err);
+        alert(`AI API failed (${activeModel}): ${err.message}. Falling back to Local Simulator Mode.`);
         simulateAI(aiPrompt);
       } finally {
         setLoadingAI(false);

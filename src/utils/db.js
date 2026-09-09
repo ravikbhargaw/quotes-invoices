@@ -125,11 +125,11 @@ const mapDbSettingsToApp = (db) => {
   const settings = getCachedSettingsSync();
   return {
     _version: db._version || SETTINGS_VERSION,
-    geminiApiKey: db.gemini_api_key || '',
-    openaiApiKey: db.openai_api_key || '',
-    anthropicApiKey: db.anthropic_api_key || '',
-    xaiApiKey: db.xai_api_key || '',
-    selectedModel: db.selected_model || 'gemini-2.5-flash',
+    geminiApiKey: (db.gemini_api_key && db.gemini_api_key.trim()) ? db.gemini_api_key : (settings.geminiApiKey || ''),
+    openaiApiKey: (db.openai_api_key && db.openai_api_key.trim()) ? db.openai_api_key : (settings.openaiApiKey || ''),
+    anthropicApiKey: (db.anthropic_api_key && db.anthropic_api_key.trim()) ? db.anthropic_api_key : (settings.anthropicApiKey || ''),
+    xaiApiKey: (db.xai_api_key && db.xai_api_key.trim()) ? db.xai_api_key : (settings.xaiApiKey || ''),
+    selectedModel: db.selected_model || settings.selectedModel || 'gemini-2.5-flash',
     supabaseUrl: settings.supabaseUrl || '',
     supabaseAnonKey: settings.supabaseAnonKey || '',
     companyLogo: db.company_logo || null,
@@ -140,7 +140,7 @@ const mapDbSettingsToApp = (db) => {
     terms: db.terms || DEFAULT_SETTINGS.terms,
     predefinedProducts: db.predefined_products || DEFAULT_SETTINGS.predefinedProducts,
     logoHeight: db.logo_height || 45,
-    serviceRoleKey: db.service_role_key || ''
+    serviceRoleKey: (db.service_role_key && db.service_role_key.trim()) ? db.service_role_key : (settings.serviceRoleKey || '')
   };
 };
 
