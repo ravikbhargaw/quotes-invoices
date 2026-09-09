@@ -342,18 +342,19 @@ export async function saveClient(client) {
   if (supabase) {
     try {
       if (client.id && isUUID(client.id)) { // UUID
+        const { _isLocalFallback, ...cleanClient } = client;
         const { data, error } = await supabase
           .from('clients')
-          .update(client)
+          .update(cleanClient)
           .eq('id', client.id)
           .select();
         if (error) throw error;
         return data[0];
       } else {
-        const { id, ...newClient } = client; // Let Supabase gen UUID
+        const { id, _isLocalFallback, ...cleanClient } = client; // Let Supabase gen UUID
         const { data, error } = await supabase
           .from('clients')
-          .insert(newClient)
+          .insert(cleanClient)
           .select();
         if (error) throw error;
         return data[0];
@@ -483,15 +484,16 @@ export async function saveQuote(quote) {
     try {
       let data, error;
       if (quote.id && isUUID(quote.id)) { // UUID
+        const { _isLocalFallback, ...cleanQuote } = quote;
         const res = await supabase
           .from('quotes')
-          .update(quote)
+          .update(cleanQuote)
           .eq('id', quote.id)
           .select();
         data = res.data;
         error = res.error;
       } else {
-        const { id, ...newQuote } = quote; // Let Supabase gen UUID
+        const { id, _isLocalFallback, ...newQuote } = quote; // Let Supabase gen UUID
         const res = await supabase
           .from('quotes')
           .insert(newQuote)
@@ -504,7 +506,7 @@ export async function saveQuote(quote) {
         // If save failed because of a missing column, strip non-DB fields and retry
         if (error.code === 'PGRST204' || error.message?.includes('column')) {
           console.warn('Supabase save failed due to missing column schema mismatch, retrying with sanitized quote...', error);
-          const { quote_discount_pct, quoteDiscountPct, desc, ...sanitized } = quote;
+          const { quote_discount_pct, quoteDiscountPct, desc, _isLocalFallback, ...sanitized } = quote;
           
           if (quote.id && isUUID(quote.id)) {
             const retryRes = await supabase
@@ -587,7 +589,7 @@ export async function syncLocalDataToCloud() {
     const remainingClients = [...localClients];
     for (const c of localClients) {
       try {
-        const { id, created_at, updated_at, ...cleanClient } = c;
+        const { id, created_at, updated_at, _isLocalFallback, ...cleanClient } = c;
         const { data, error } = await supabase.from('clients').insert(cleanClient).select();
         if (error) throw error;
         if (data && data[0]) {
@@ -610,7 +612,7 @@ export async function syncLocalDataToCloud() {
     const remainingQuotes = [...localQuotes];
     for (const q of localQuotes) {
       try {
-        const { id, created_at, updated_at, ...cleanQuote } = q;
+        const { id, created_at, updated_at, _isLocalFallback, ...cleanQuote } = q;
         // Map local client_id to supabase uuid
         if (cleanQuote.client_id && clientMapping[cleanQuote.client_id]) {
           cleanQuote.client_id = clientMapping[cleanQuote.client_id];
@@ -621,7 +623,7 @@ export async function syncLocalDataToCloud() {
         let { error } = await supabase.from('quotes').insert(cleanQuote);
         if (error && (error.code === 'PGRST204' || error.message?.includes('column'))) {
           console.warn('Sync insert failed due to missing column schema mismatch, retrying with sanitized quote...');
-          const { quote_discount_pct, quoteDiscountPct, desc, ...sanitized } = cleanQuote;
+          const { quote_discount_pct, quoteDiscountPct, desc, _isLocalFallback, ...sanitized } = cleanQuote;
           const retryRes = await supabase.from('quotes').insert(sanitized);
           error = retryRes.error;
         }
