@@ -294,84 +294,102 @@ export default function Settings({ settings, onSaveSettings, currentUserEmail, i
       
       {/* Horizontal Premium tab controls */}
       <div style={{
+        padding: '14px 16px',
+        borderBottom: '1px solid #E5E7EB',
+        backgroundColor: '#FFFFFF',
         display: 'flex',
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        flexWrap: 'wrap',
-        gap: '6px',
-        padding: '12px 14px',
-        borderBottom: '1px solid var(--border)',
-        backgroundColor: '#FAF9F6'
+        flexDirection: 'column',
+        gap: '12px'
       }}>
-        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', flex: 1 }}>
-          {[
-            { key: 'defaults', label: 'Defaults' },
-            { key: 'gemini', label: 'AI Key' },
-            { key: 'products', label: 'Catalog' },
-            { key: 'supabase', label: 'Supabase DB' },
-            ...(isUserAdmin ? [{ key: 'team', label: 'Team Directory' }] : [])
-          ].map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={activeTab === tab.key ? "btn" : "btn-outline"}
-              style={{
-                width: 'auto',
-                fontSize: '11px',
-                padding: '6px 12px',
-                justifyContent: 'center',
-                textTransform: 'none',
-                letterSpacing: 'normal'
-              }}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: '10px',
+          flexWrap: 'wrap'
+        }}>
+          {/* Navigation Pill Tabs */}
+          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', flex: 1 }}>
+            {[
+              { key: 'defaults', label: 'Company & Defaults' },
+              { key: 'gemini', label: 'AI Keys' },
+              { key: 'products', label: 'Catalog' },
+              { key: 'supabase', label: 'Supabase DB' },
+              ...(isUserAdmin ? [{ key: 'team', label: 'Team Directory' }] : [])
+            ].map((tab) => {
+              const active = activeTab === tab.key;
+              return (
+                <button
+                  key={tab.key}
+                  type="button"
+                  onClick={() => setActiveTab(tab.key)}
+                  style={{
+                    padding: '6px 14px',
+                    fontSize: '11.5px',
+                    fontWeight: active ? '700' : '600',
+                    color: active ? '#FFFFFF' : '#374151',
+                    backgroundColor: active ? '#1B2B45' : '#F3F4F6',
+                    border: active ? '1px solid #1B2B45' : '1px solid #E5E7EB',
+                    borderRadius: '20px',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
 
-        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-          <button
-            type="button"
-            onClick={() => {
-              const res = restoreAllLocalDataBackup();
-              if (onDataRestored) onDataRestored();
-              alert(`Data Recovery Completed!\n- Recovered ${res.quotesCount} quote(s)\n- Recovered ${res.clientsCount} client(s)`);
-            }}
-            className="btn-outline"
-            style={{
-              fontSize: '11px',
-              padding: '6px 10px',
-              color: '#1B2B45',
-              borderColor: '#CBD5E1',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px'
-            }}
-            title="Restore any quotes or clients backed up in browser local storage"
-          >
-            <RefreshCw size={12} /> Restore Data Backup
-          </button>
-
-          {onLogout && (
+          {/* Action Buttons */}
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
             <button
               type="button"
-              onClick={onLogout}
-              className="btn"
+              onClick={() => {
+                const res = restoreAllLocalDataBackup();
+                if (onDataRestored) onDataRestored();
+                alert(`Data Recovery Completed!\n- Recovered ${res.quotesCount} quote(s)\n- Recovered ${res.clientsCount} client(s)`);
+              }}
               style={{
                 fontSize: '11px',
+                fontWeight: '600',
                 padding: '6px 12px',
-                backgroundColor: '#DC2626',
-                color: '#FFFFFF',
-                border: 'none',
+                color: '#1B2B45',
+                backgroundColor: '#FFFFFF',
+                border: '1px solid #CBD5E1',
+                borderRadius: '6px',
+                cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '4px'
+                gap: '5px'
               }}
+              title="Restore any quotes or clients backed up in browser local storage"
             >
-              <LogOut size={12} /> Log Out
+              <RefreshCw size={13} /> Restore Data Backup
             </button>
-          )}
+
+            {onLogout && (
+              <button
+                type="button"
+                onClick={onLogout}
+                style={{
+                  fontSize: '11px',
+                  fontWeight: '700',
+                  padding: '6px 14px',
+                  backgroundColor: '#DC2626',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px'
+                }}
+              >
+                <LogOut size={13} /> Log Out
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -663,40 +681,66 @@ export default function Settings({ settings, onSaveSettings, currentUserEmail, i
         {activeTab === 'defaults' && (
           <div className="space-y-4 text-left">
             {/* Logo Settings */}
-            <div className="space-y-2">
-              <label className="input-label">Company Logo</label>
-              {localSettings.companyLogo ? (
-                <div className="flex items-center justify-between bg-zinc-50 p-2 border border-[var(--ui-border)] rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <img src={localSettings.companyLogo} alt="Logo" style={{ height: '32px', objectFit: 'contain' }} />
-                    <span className="text-[10px] text-[var(--ui-text-muted)] font-medium">Custom Uploaded Logo</span>
-                  </div>
-                  <div className="flex items-center gap-3">
+            <div style={{
+              background: '#F8FAFC',
+              border: '1px solid #E2E8F0',
+              borderRadius: '8px',
+              padding: '14px 16px',
+              marginBottom: '14px'
+            }}>
+              <label style={{ display: 'block', fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#475569', marginBottom: '10px' }}>
+                Company Logo
+              </label>
+              
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <img 
+                    src={localSettings.companyLogo || "/quotes_logo.png"} 
+                    alt="Company Logo" 
+                    style={{ height: '36px', maxHeight: '48px', objectFit: 'contain' }} 
+                  />
+                  <span style={{ fontSize: '11px', color: '#64748B', fontWeight: '500' }}>
+                    {localSettings.companyLogo ? 'Custom Uploaded Logo' : 'Default Meaven Logo'}
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  {localSettings.companyLogo && (
                     <button 
                       type="button" 
                       onClick={handleResetLogo}
-                      className="text-[10px] text-rose-600 hover:underline font-semibold"
+                      style={{
+                        padding: '6px 10px',
+                        fontSize: '11px',
+                        fontWeight: '600',
+                        color: '#DC2626',
+                        background: '#FFFFFF',
+                        border: '1px solid #FECACA',
+                        borderRadius: '4px',
+                        cursor: 'pointer'
+                      }}
                     >
                       Reset to Default
                     </button>
-                    <label className="text-[10px] text-[var(--ui-accent)] hover:underline font-semibold cursor-pointer">
-                      Upload New
-                      <input type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" />
-                    </label>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex items-center justify-between bg-zinc-50 p-2 border border-[var(--ui-border)] rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <img src="/quotes_logo.png" alt="Logo" style={{ height: '32px', objectFit: 'contain' }} />
-                    <span className="text-[10px] text-[var(--ui-text-muted)] font-medium">Using Default Logo</span>
-                  </div>
-                  <label className="text-[10px] text-[var(--ui-accent)] hover:underline font-semibold cursor-pointer">
-                    Upload Custom Logo
-                    <input type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" />
+                  )}
+                  <label style={{
+                    padding: '6px 12px',
+                    fontSize: '11px',
+                    fontWeight: '600',
+                    color: '#1B2B45',
+                    background: '#FFFFFF',
+                    border: '1px solid #CBD5E1',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}>
+                    Upload New Logo
+                    <input type="file" accept="image/*" onChange={handleLogoUpload} style={{ display: 'none' }} />
                   </label>
                 </div>
-              )}
+              </div>
             </div>
 
             {/* Logo Size Slider */}
