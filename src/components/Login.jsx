@@ -7,7 +7,35 @@ export default function Login({ onLoginSuccess, onBypassOffline, onSettingsUpdat
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
   const [isNetworkErr, setIsNetworkErr] = useState(false);
+
+  const handleForgotPassword = async () => {
+    if (!email.trim()) {
+      setErrorMsg('Please enter your email address above first.');
+      return;
+    }
+    setLoading(true);
+    setErrorMsg('');
+    setSuccessMsg('');
+
+    try {
+      const supabase = getSupabase();
+      if (!supabase) {
+        throw new Error('Supabase is not configured yet.');
+      }
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: window.location.origin
+      });
+      if (error) throw error;
+      setSuccessMsg(`Password reset link sent to ${email.trim()}! Check your inbox.`);
+    } catch (err) {
+      console.error(err);
+      setErrorMsg(err.message || 'Failed to send reset link.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Database inline configuration states
   const [showDbConfig, setShowDbConfig] = useState(false);
@@ -234,6 +262,25 @@ export default function Login({ onLoginSuccess, onBypassOffline, onSettingsUpdat
           </div>
         )}
 
+        {successMsg && (
+          <div style={{
+            background: '#ECFDF5',
+            border: '1px solid #A7F3D0',
+            color: '#065F46',
+            padding: '12px 14px',
+            fontSize: '12px',
+            borderRadius: '6px',
+            marginBottom: '20px',
+            textAlign: 'left',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}>
+            <CheckCircle2 style={{ width: '16px', height: '16px', color: '#10B981', flexShrink: 0 }} />
+            <span style={{ lineHeight: '1.4' }}>{successMsg}</span>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {/* Email input group */}
           <div style={{ textAlign: 'left' }}>
@@ -285,17 +332,34 @@ export default function Login({ onLoginSuccess, onBypassOffline, onSettingsUpdat
 
           {/* Password input group */}
           <div style={{ textAlign: 'left' }}>
-            <label style={{
-              display: 'block',
-              fontSize: '9px',
-              fontWeight: '700',
-              textTransform: 'uppercase',
-              letterSpacing: '0.08em',
-              color: '#1B2B45',
-              marginBottom: '6px'
-            }}>
-              Password
-            </label>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+              <label style={{
+                fontSize: '9px',
+                fontWeight: '700',
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+                color: '#1B2B45',
+                margin: 0
+              }}>
+                Password
+              </label>
+              <button
+                type="button"
+                onClick={handleForgotPassword}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#C9A96E',
+                  fontSize: '10px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  padding: 0,
+                  textDecoration: 'underline'
+                }}
+              >
+                Forgot Password?
+              </button>
+            </div>
             <div style={{ position: 'relative' }}>
               <KeyRound style={{
                 position: 'absolute',
