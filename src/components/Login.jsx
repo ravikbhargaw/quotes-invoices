@@ -24,8 +24,11 @@ export default function Login({ onLoginSuccess, onBypassOffline, onSettingsUpdat
       if (!supabase) {
         throw new Error('Supabase is not configured yet.');
       }
+      const redirectUrl = window.location.origin.includes('localhost') 
+        ? window.location.origin 
+        : 'https://quotes.meaven.in';
       const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: window.location.origin
+        redirectTo: redirectUrl
       });
       if (error) throw error;
       setSuccessMsg(`Password reset link sent to ${email.trim()}! Check your inbox.`);
