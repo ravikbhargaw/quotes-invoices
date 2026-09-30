@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Save, Database, Sparkles, FileText, ClipboardList, Trash2, Plus, 
-  RotateCcw, AlertCircle, CheckCircle, WifiOff 
+  RotateCcw, AlertCircle, CheckCircle, WifiOff, LogOut, RefreshCw
 } from 'lucide-react';
-import { testSupabaseConnection } from '../utils/db';
+import { testSupabaseConnection, restoreAllLocalDataBackup, getSupabase } from '../utils/db';
 
-export default function Settings({ settings, onSaveSettings, currentUserEmail, isAdmin }) {
+export default function Settings({ settings, onSaveSettings, currentUserEmail, isAdmin, onLogout, onDataRestored }) {
   const [activeTab, setActiveTab] = useState('defaults'); // 'defaults', 'gemini', 'products', 'supabase', 'team'
   const [localSettings, setLocalSettings] = useState({ ...settings });
   const isUserAdmin = isAdmin || currentUserEmail?.toLowerCase() === 'ravi.bhargaw@meaven.in';
@@ -296,36 +296,83 @@ export default function Settings({ settings, onSaveSettings, currentUserEmail, i
       <div style={{
         display: 'flex',
         flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
         flexWrap: 'wrap',
         gap: '6px',
         padding: '12px 14px',
         borderBottom: '1px solid var(--border)',
         backgroundColor: '#FAF9F6'
       }}>
-        {[
-          { key: 'defaults', label: 'Defaults' },
-          { key: 'gemini', label: 'AI Key' },
-          { key: 'products', label: 'Catalog' },
-          { key: 'supabase', label: 'Supabase DB' },
-          ...(isUserAdmin ? [{ key: 'team', label: 'Team Directory' }] : [])
-        ].map((tab) => (
+        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', flex: 1 }}>
+          {[
+            { key: 'defaults', label: 'Defaults' },
+            { key: 'gemini', label: 'AI Key' },
+            { key: 'products', label: 'Catalog' },
+            { key: 'supabase', label: 'Supabase DB' },
+            ...(isUserAdmin ? [{ key: 'team', label: 'Team Directory' }] : [])
+          ].map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={activeTab === tab.key ? "btn" : "btn-outline"}
+              style={{
+                width: 'auto',
+                fontSize: '11px',
+                padding: '6px 12px',
+                justifyContent: 'center',
+                textTransform: 'none',
+                letterSpacing: 'normal'
+              }}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
           <button
-            key={tab.key}
-            onClick={() => setActiveTab(tab.key)}
-            className={activeTab === tab.key ? "btn" : "btn-outline"}
-            style={{
-              width: 'auto',
-              flex: '1 0 auto',
-              fontSize: '11px',
-              padding: '6px 12px',
-              justifyContent: 'center',
-              textTransform: 'none',
-              letterSpacing: 'normal'
+            type="button"
+            onClick={() => {
+              const res = restoreAllLocalDataBackup();
+              if (onDataRestored) onDataRestored();
+              alert(`Data Recovery Completed!\n- Recovered ${res.quotesCount} quote(s)\n- Recovered ${res.clientsCount} client(s)`);
             }}
+            className="btn-outline"
+            style={{
+              fontSize: '11px',
+              padding: '6px 10px',
+              color: '#1B2B45',
+              borderColor: '#CBD5E1',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}
+            title="Restore any quotes or clients backed up in browser local storage"
           >
-            {tab.label}
+            <RefreshCw size={12} /> Restore Data Backup
           </button>
-        ))}
+
+          {onLogout && (
+            <button
+              type="button"
+              onClick={onLogout}
+              className="btn"
+              style={{
+                fontSize: '11px',
+                padding: '6px 12px',
+                backgroundColor: '#DC2626',
+                color: '#FFFFFF',
+                border: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}
+            >
+              <LogOut size={12} /> Log Out
+            </button>
+          )}
+        </div>
       </div>
 
       <div 

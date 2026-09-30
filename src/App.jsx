@@ -2,13 +2,14 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Sparkles, FileText, History, Users, Settings as SettingsIcon, 
   Plus, Printer, Save, Database, Trash2, Copy, Trash, ArrowRight,
-  TrendingUp, Clock, CheckCircle, ChevronUp, ChevronDown, LogOut
+  TrendingUp, Clock, CheckCircle, ChevronUp, ChevronDown, LogOut, WifiOff
 } from 'lucide-react';
 import { 
   getQuotes, saveQuote, deleteQuote, 
   getClients, saveClient, deleteClient, 
   getSettings, saveSettings, getSupabase,
-  getCachedSettingsSync, syncLocalDataToCloud
+  getCachedSettingsSync, syncLocalDataToCloud,
+  restoreAllLocalDataBackup
 } from './utils/db';
 import DocumentPreview from './components/DocumentPreview';
 import Clients from './components/Clients';
@@ -98,6 +99,7 @@ export default function App() {
   const [clients, setClients] = useState([]);
   const [settings, setSettings] = useState(getCachedSettingsSync());
   const [dbConnected, setDbConnected] = useState(false);
+  const [isOfflineMode, setIsOfflineMode] = useState(() => localStorage.getItem('meaven_offline_mode') === 'true');
   const [session, setSession] = useState(null);
   const [loadingSession, setLoadingSession] = useState(true);
 
@@ -265,20 +267,23 @@ export default function App() {
         const localClients = JSON.parse(localStorage.getItem('meaven_clients') || '[]');
         if (localQuotes.length > 0 || localClients.length > 0) {
           console.log(`Auto-syncing ${localQuotes.length} local quotes and ${localClients.length} local clients...`);
-          const syncRes = await syncLocalDataToCloud();
-          if (syncRes && !syncRes.success) {
-            alert(syncRes.message);
-          }
+          await syncLocalDataToCloud();
         }
       } catch (err) {
         console.error('Auto-sync failed:', err);
       }
     }
 
-    const loadedQuotes = await getQuotes();
-    setQuotes(loadedQuotes);
+    let loadedQuotes = await getQuotes();
+    let loadedClients = await getClients();
 
-    const loadedClients = await getClients();
+    if (loadedQuotes.length === 0 || loadedClients.length === 0) {
+      restoreAllLocalDataBackup();
+      loadedQuotes = await getQuotes();
+      loadedClients = await getClients();
+    }
+
+    setQuotes(loadedQuotes);
     setClients(loadedClients);
   };
 
@@ -1594,9 +1599,18 @@ Quote:
     );
   }
 
-  // 2. Check if DB is connected and user is not authenticated
-  if (dbConnected && !session) {
-    return <Login onLoginSuccess={(s) => setSession(s)} />;
+  // 2. Check if DB is connected and user is not authenticated and not in offline mode
+  if (dbConnected && !session && !isOfflineMode) {
+    return (
+      <Login 
+        onLoginSuccess={(s) => setSession(s)}
+        onBypassOffline={() => {
+          localStorage.setItem('meaven_offline_mode', 'true');
+          setIsOfflineMode(true);
+        }}
+        onSettingsUpdated={loadData}
+      />
+    );
   }
 
   // 3. Forced Password Reset Flow
@@ -1747,7 +1761,24 @@ Quote:
 
         {/* Bottom actions and indicators */}
         <div className="mt-auto flex flex-col items-center gap-3">
-          {session && (
+          {isOfflineMode && (
+            <div 
+              onClick={() => {
+                if (window.confirm("Switch back to Cloud Database mode and reconnect to Supabase?")) {
+                  localStorage.removeItem('meaven_offline_mode');
+                  setIsOfflineMode(false);
+                  loadData();
+                }
+              }}
+              className="nav-item cursor-pointer text-amber-500 hover:text-amber-600"
+              data-tooltip="Local Offline Mode (Click to Reconnect Cloud)"
+              style={{ margin: 0 }}
+            >
+              <WifiOff size={20} />
+            </div>
+          )}
+
+          {(session || isOfflineMode) && (
             <div 
               onClick={async () => {
                 if (activeTab === 'form' && isDirty) {
@@ -1756,12 +1787,14 @@ Quote:
                 }
                 const supabase = getSupabase();
                 if (supabase) {
-                  await supabase.auth.signOut();
-                  setSession(null);
+                  try { await supabase.auth.signOut(); } catch (e) {}
                 }
+                setSession(null);
+                localStorage.removeItem('meaven_offline_mode');
+                setIsOfflineMode(false);
               }}
               className="nav-item cursor-pointer text-zinc-400 hover:text-red-500"
-              data-tooltip="Log Out"
+              data-tooltip="Log Out / Exit"
               style={{ margin: 0 }}
             >
               <LogOut size={20} />
@@ -2971,6 +3004,20 @@ Quote:
                 onBack={() => setActiveTab('form')}
                 currentUserEmail={userEmail}
                 isAdmin={isAdmin}
+                onDataRestored={loadData}
+                onLogout={async () => {
+                  if (activeTab === 'form' && isDirty) {
+                    const confirmLeave = window.confirm("You have unsaved changes in your active quote. If you log out, you will lose your unsaved edits. Are you sure you want to proceed?");
+                    if (!confirmLeave) return;
+                  }
+                  const supabase = getSupabase();
+                  if (supabase) {
+                    await supabase.auth.signOut();
+                  }
+                  setSession(null);
+                  localStorage.removeItem('meaven_offline_mode');
+                  setIsOfflineMode(false);
+                }}
               />
             </div>
           </div>

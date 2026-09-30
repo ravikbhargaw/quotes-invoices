@@ -282,13 +282,28 @@ export function getSupabase() {
 // Test Supabase Connection
 export async function testSupabaseConnection(url, key) {
   try {
-    const client = createClient(url, key);
-    const { data, error } = await client.from('quotes').select('id').limit(1);
-    if (error) throw error;
-    return { success: true };
+    if (!url || !key) {
+      return { success: false, message: 'Please provide both Supabase URL and Anon Key.' };
+    }
+    const client = createClient(url.trim(), key.trim());
+    const { error } = await client.from('quotes').select('id').limit(1);
+    if (error) {
+      const isFetchErr = error.message?.toLowerCase().includes('failed to fetch') || error.message?.toLowerCase().includes('fetch failed');
+      if (isFetchErr) {
+        return { 
+          success: false, 
+          message: `Unable to connect to Supabase at "${url}". Check your network connection or verify the URL (project may be paused or deleted).` 
+        };
+      }
+      throw error;
+    }
+    return { success: true, message: 'Successfully connected to Supabase database!' };
   } catch (error) {
     console.error('Supabase connection test failed:', error);
-    return { success: false, message: error.message };
+    const msg = error.message?.toLowerCase().includes('failed to fetch') || error.message?.toLowerCase().includes('fetch failed')
+      ? `Unable to reach Supabase server (${url}). Check your network connection or verify if the Supabase project is active.`
+      : (error.message || 'Connection failed.');
+    return { success: false, message: msg };
   }
 }
 
@@ -298,7 +313,16 @@ export async function testSupabaseConnection(url, key) {
 function getLocalClients() {
   try {
     const saved = localStorage.getItem('meaven_clients');
-    return saved ? JSON.parse(saved) : [];
+    const backup = localStorage.getItem('meaven_clients_backup');
+    let clients = saved ? JSON.parse(saved) : [];
+    const backupClients = backup ? JSON.parse(backup) : [];
+
+    for (const bc of backupClients) {
+      if (!clients.some(c => (c.id && c.id === bc.id) || (c.name && c.name?.toLowerCase() === bc.name?.toLowerCase()))) {
+        clients.push(bc);
+      }
+    }
+    return clients;
   } catch (e) {
     console.error(e);
     return [];
@@ -306,7 +330,19 @@ function getLocalClients() {
 }
 
 function saveLocalClients(clients) {
-  localStorage.setItem('meaven_clients', JSON.stringify(clients));
+  try {
+    localStorage.setItem('meaven_clients', JSON.stringify(clients));
+    const backup = JSON.parse(localStorage.getItem('meaven_clients_backup') || '[]');
+    const merged = [...backup];
+    for (const c of clients) {
+      const idx = merged.findIndex(b => (b.id && b.id === c.id) || (b.name && b.name?.toLowerCase() === c.name?.toLowerCase()));
+      if (idx !== -1) merged[idx] = c;
+      else merged.push(c);
+    }
+    localStorage.setItem('meaven_clients_backup', JSON.stringify(merged));
+  } catch (e) {
+    console.error('Failed to save local clients', e);
+  }
 }
 
 // Get Clients list
@@ -414,7 +450,16 @@ const normalizeArray = (val) => {
 function getLocalQuotes() {
   try {
     const saved = localStorage.getItem('meaven_quotes');
-    const quotes = saved ? JSON.parse(saved) : [];
+    const backup = localStorage.getItem('meaven_quotes_backup');
+    let quotes = saved ? JSON.parse(saved) : [];
+    const backupQuotes = backup ? JSON.parse(backup) : [];
+
+    for (const bq of backupQuotes) {
+      if (!quotes.some(q => (q.id && q.id === bq.id) || (q.quote_number && q.quote_number === bq.quote_number))) {
+        quotes.push(bq);
+      }
+    }
+
     return quotes.map(q => {
       const cleanTerms = normalizeArray(q.terms).filter(term => !term.toLowerCase().includes('attached') && !term.toLowerCase().includes('image'));
       const cleanNotes = normalizeArray(q.notes).filter(note => !note.toLowerCase().includes('attached') && !note.toLowerCase().includes('image'));
@@ -434,7 +479,19 @@ function getLocalQuotes() {
 }
 
 function saveLocalQuotes(quotes) {
-  localStorage.setItem('meaven_quotes', JSON.stringify(quotes));
+  try {
+    localStorage.setItem('meaven_quotes', JSON.stringify(quotes));
+    const backup = JSON.parse(localStorage.getItem('meaven_quotes_backup') || '[]');
+    const merged = [...backup];
+    for (const q of quotes) {
+      const idx = merged.findIndex(b => (b.id && b.id === q.id) || (b.quote_number && b.quote_number === q.quote_number));
+      if (idx !== -1) merged[idx] = q;
+      else merged.push(q);
+    }
+    localStorage.setItem('meaven_quotes_backup', JSON.stringify(merged));
+  } catch (e) {
+    console.error('Failed to save local quotes', e);
+  }
 }
 
 // Get Quotes list
@@ -586,21 +643,16 @@ export async function syncLocalDataToCloud() {
     let clientMapping = {}; // local_id -> supabase_uuid
 
     // Sync Clients
-    const remainingClients = [...localClients];
     for (const c of localClients) {
+      if (c._synced) continue;
       try {
-        const { id, created_at, updated_at, _isLocalFallback, ...cleanClient } = c;
+        const { id, created_at, updated_at, _isLocalFallback, _synced, ...cleanClient } = c;
         const { data, error } = await supabase.from('clients').insert(cleanClient).select();
         if (error) throw error;
         if (data && data[0]) {
           clientMapping[id] = data[0].id;
-          
-          // Successfully synced, remove from remaining and update local storage immediately
-          const idx = remainingClients.findIndex(item => item.id === id);
-          if (idx !== -1) {
-            remainingClients.splice(idx, 1);
-            saveLocalClients(remainingClients);
-          }
+          c._synced = true;
+          saveLocalClients(localClients);
         }
       } catch (err) {
         console.error('Failed to sync client during loop:', c, err);
@@ -609,14 +661,13 @@ export async function syncLocalDataToCloud() {
     }
 
     // Sync Quotes
-    const remainingQuotes = [...localQuotes];
     for (const q of localQuotes) {
+      if (q._synced) continue;
       try {
-        const { id, created_at, updated_at, _isLocalFallback, ...cleanQuote } = q;
-        // Map local client_id to supabase uuid
+        const { id, created_at, updated_at, _isLocalFallback, _synced, ...cleanQuote } = q;
         if (cleanQuote.client_id && clientMapping[cleanQuote.client_id]) {
           cleanQuote.client_id = clientMapping[cleanQuote.client_id];
-        } else {
+        } else if (!isUUID(cleanQuote.client_id)) {
           cleanQuote.client_id = null;
         }
         
@@ -629,12 +680,8 @@ export async function syncLocalDataToCloud() {
         }
         if (error) throw error;
         
-        // Successfully synced, remove from remaining and update local storage immediately
-        const idx = remainingQuotes.findIndex(item => item.id === id);
-        if (idx !== -1) {
-          remainingQuotes.splice(idx, 1);
-          saveLocalQuotes(remainingQuotes);
-        }
+        q._synced = true;
+        saveLocalQuotes(localQuotes);
       } catch (err) {
         console.error('Failed to sync quote during loop:', q, err);
         syncErrors.push(`Quote "${q.quote_number || q.id}": ${err.message || err}`);
@@ -653,4 +700,13 @@ export async function syncLocalDataToCloud() {
     console.error('Sync failed:', e);
     return { success: false, message: e.message };
   }
+}
+
+// Emergency Restore All Data Backup from localStorage
+export function restoreAllLocalDataBackup() {
+  const localQuotes = getLocalQuotes();
+  const localClients = getLocalClients();
+  saveLocalQuotes(localQuotes);
+  saveLocalClients(localClients);
+  return { quotesCount: localQuotes.length, clientsCount: localClients.length };
 }
