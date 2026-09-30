@@ -9,7 +9,7 @@ import {
   getClients, saveClient, deleteClient, 
   getSettings, saveSettings, getSupabase,
   getCachedSettingsSync, syncLocalDataToCloud,
-  restoreAllLocalDataBackup
+  restoreAllLocalDataBackup, forceLogout
 } from './utils/db';
 import DocumentPreview from './components/DocumentPreview';
 import Clients from './components/Clients';
@@ -1785,12 +1785,8 @@ Quote:
                   const confirmLeave = window.confirm("You have unsaved changes in your active quote. If you log out, you will lose your unsaved edits. Are you sure you want to proceed?");
                   if (!confirmLeave) return;
                 }
-                const supabase = getSupabase();
-                if (supabase) {
-                  try { await supabase.auth.signOut(); } catch (e) {}
-                }
+                await forceLogout();
                 setSession(null);
-                localStorage.removeItem('meaven_offline_mode');
                 setIsOfflineMode(false);
               }}
               className="nav-item cursor-pointer text-zinc-400 hover:text-red-500"
@@ -3010,12 +3006,8 @@ Quote:
                     const confirmLeave = window.confirm("You have unsaved changes in your active quote. If you log out, you will lose your unsaved edits. Are you sure you want to proceed?");
                     if (!confirmLeave) return;
                   }
-                  const supabase = getSupabase();
-                  if (supabase) {
-                    await supabase.auth.signOut();
-                  }
+                  await forceLogout();
                   setSession(null);
-                  localStorage.removeItem('meaven_offline_mode');
                   setIsOfflineMode(false);
                 }}
               />

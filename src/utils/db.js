@@ -710,3 +710,25 @@ export function restoreAllLocalDataBackup() {
   saveLocalClients(localClients);
   return { quotesCount: localQuotes.length, clientsCount: localClients.length };
 }
+
+// Force Logout & Clear All Auth Tokens
+export async function forceLogout() {
+  try {
+    const supabase = getSupabase();
+    if (supabase) {
+      await supabase.auth.signOut().catch(() => {});
+    }
+  } catch (e) {}
+
+  try {
+    localStorage.removeItem('meaven_offline_mode');
+    const keysToRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && (k.startsWith('sb-') || k.includes('auth-token') || k.includes('supabase.auth'))) {
+        keysToRemove.push(k);
+      }
+    }
+    keysToRemove.forEach(k => localStorage.removeItem(k));
+  } catch (e) {}
+}
