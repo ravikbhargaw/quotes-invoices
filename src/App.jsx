@@ -194,7 +194,7 @@ export default function App() {
   const userMetadata = user?.user_metadata || {};
   const userRole = userMetadata.role || 'user';
   const userEmail = user?.email?.toLowerCase() || '';
-  const isAdmin = !dbConnected || userEmail === 'ravi.bhargaw@meaven.in' || userRole === 'admin';
+  const isAdmin = !dbConnected || isOfflineMode || !session || userEmail === 'ravi.bhargaw@meaven.in' || userRole === 'admin';
   const forcePasswordReset = userMetadata.force_password_reset === true;
 
   // Active Quote State
